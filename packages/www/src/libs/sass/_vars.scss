@@ -1,0 +1,26 @@
+$container-width: 1140px; //72.75em;
+$container-width--small: 912px;
+$container-width--public: 1280px;
+
+// Z-index
+$zIndex-notification: 400;
+$zIndex-modal: 300;
+$zIndex-sticky: 200;
+$zIndex-floating: 100;
+$zIndex-base: 0;
+$zIndex-background: -100;
+
+// Breakpoints
+$breakpoints: (
+    xs: 480px,
+    // Tailwind `xs`
+    sm: 640px,
+    // Tailwind `sm`
+    md: 768px,
+    // Tailwind `md`
+    lg: 1024px,
+    // Tailwind `lg`
+    xl: 1280px,
+    // Tailwind `xl`
+    2xl: 1536px, // Tailwind `2xl`
+);

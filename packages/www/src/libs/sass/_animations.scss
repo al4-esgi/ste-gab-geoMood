@@ -1,0 +1,24 @@
+@mixin slideUp {
+    animation: slideUp 0.5s ease-in-out;
+}
+
+@mixin spin {
+    animation: spin 0.5s linear infinite;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

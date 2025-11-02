@@ -1,0 +1,99 @@
+.display-1 {
+    font-size: 3.75em;
+
+    @media screen and (min-width: 768px) {
+        font-size: 4.75em;
+    }
+
+    @media screen and (min-width: 1024px) {
+        font-size: 6em;
+    }
+}
+
+.display-2 {
+    font-size: 2.625em;
+
+    @media screen and (min-width: 768px) {
+        font-size: 3em;
+    }
+
+    @media screen and (min-width: 1024px) {
+        font-size: 3.75em;
+    }
+}
+
+.title-1 {
+    font-size: 2.5em;
+
+    @media screen and (min-width: 768px) {
+        font-size: 2.25em;
+    }
+
+    @media screen and (min-width: 1024px) {
+        font-size: 2.5em;
+    }
+}
+
+.title-2 {
+    font-size: 2em;
+
+    @media screen and (min-width: 768px) {
+        font-size: 1.5em;
+    }
+
+    @media screen and (min-width: 1024px) {
+        font-size: 2em;
+    }
+}
+
+.title-3 {
+    font-size: 1.375em;
+
+    @media screen and (min-width: 768px) {
+        font-size: 1.25em;
+    }
+
+    @media screen and (min-width: 1024px) {
+        font-size: 1.5em;
+    }
+}
+
+.title-4 {
+    font-size: 1.125em;
+
+    @media screen and (min-width: 768px) {
+        font-size: 1.125em;
+    }
+
+    @media screen and (min-width: 1024px) {
+        font-size: 1.25em;
+    }
+}
+
+.text-xs {
+    font-size: 0.75rem !important;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.text-base {
+    font-size: 1rem;
+}
+
+.font-normal {
+    font-weight: 400;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.text-center {
+    text-align: center;
+}

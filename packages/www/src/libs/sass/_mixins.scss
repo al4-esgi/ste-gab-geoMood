@@ -1,0 +1,13 @@
+@use 'sass:map';
+@use 'vars';
+
+/* Mixin for responsive design */
+@mixin respond-to($size) {
+    @if map.has-key(vars.$breakpoints, $size) {
+        @media (min-width: #{map.get(vars.$breakpoints, $size)}) {
+            @content;
+        }
+    } @else {
+        @warn "Breakpoint '#{$size}' not found in \$breakpoints map.";
+    }
+}

@@ -1,0 +1,72 @@
+@use 'global';
+@use 'vars';
+@use 'texts';
+@use 'mixins';
+@use 'animations';
+
+:root {
+    --font: 'Roboto', sans-serif;
+}
+
+html,
+body {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    box-sizing: border-box;
+    font-family: var(--font);
+    width: 100%;
+    line-height: normal;
+    background: var(--bg-default);
+
+    font-size: 0.875rem;
+
+    @include mixins.respond-to(md) {
+        font-size: 1rem;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+    margin: 0;
+    padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: inherit;
+    text-decoration: inherit;
+}
+
+b,
+strong {
+    font-weight: 700 !important;
+}
+
+i {
+    line-height: 0;
+    display: inline-block;
+}
+
+ul,
+li {
+    list-style: none;
+}
+
+.p-card {
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px !important;
+}
+
+.p-card-body {
+    gap: 1.5em !important;
+}
