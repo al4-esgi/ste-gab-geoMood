@@ -1,10 +1,16 @@
 {
-  "name": "geomood-repo",
+  "name": "geomood",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:server": "npm run dev -w @geomood/server",
+    "dev:www": "npm run dev -w @geomood/www",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "biome check --write ./packages/*",
+    "install:all": "npm install --workspaces"
   },
   "repository": {
     "type": "git",
@@ -18,8 +24,9 @@
     "url": "https://github.com/al4-esgi/ste-gab-geoMood/issues"
   },
   "homepage": "https://github.com/al4-esgi/ste-gab-geoMood#readme",
-  "workspaces": [
-    "package/server",
-    "packages/www"
-  ]
+  "workspaces": ["./packages/*"],
+  "dependencies": {
+    "@geomood/server": "0.0.0",
+    "@geomood/www": "0.0.0"
+  }
 }
