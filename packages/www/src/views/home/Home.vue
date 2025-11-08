@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import MapView from './partials/MapView.vue';
+import CameraCapture from './partials/CameraCapture.vue';
 </script>
 
 <template>
     <div class="home">
         <MapView />
+        <CameraCapture />
     </div>
 </template>
 

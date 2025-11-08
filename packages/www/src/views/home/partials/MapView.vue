@@ -2,8 +2,10 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue3-toastify';
+import Card from 'primevue/card';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 
 const { t } = useI18n();
 const mapContainer = ref<HTMLElement | null>(null);
@@ -73,7 +75,6 @@ const requestGeolocation = () => {
                 }
             },
             (error) => {
-                console.error('Erro ao obter localização:', error);
                 if (error.code === error.PERMISSION_DENIED) {
                     toast.error(t('map.geolocationDenied'));
                 } else {
@@ -120,8 +121,7 @@ const initPermissionWatcher = async () => {
                     }
                 }
             });
-        } catch (error) {
-            console.error('Erro ao monitorar permissões:', error);
+        } catch {
         }
     }
 };
@@ -145,10 +145,14 @@ onUnmounted(() => {
 
 <template>
     <div class="map-view">
-        <div v-if="isLoadingLocation" class="map-view__loading">
-            <div class="map-view__spinner" />
-            <p class="map-view__loading-text">{{ t('map.loading') }}</p>
-        </div>
+        <Card v-if="isLoadingLocation" class="map-view__loading">
+            <template #content>
+                <div class="map-view__loading-content">
+                    <LoadingSpinner />
+                    <p class="map-view__loading-text">{{ t('map.loading') }}</p>
+                </div>
+            </template>
+        </Card>
         <div ref="mapContainer" class="map-view__container" />
     </div>
 </template>
@@ -168,7 +172,6 @@ onUnmounted(() => {
 </i18n>
 
 <style lang="scss" scoped>
-@use '@/libs/sass/animations';
 @use '@/libs/sass/vars';
 
 .map-view {
@@ -185,28 +188,19 @@ onUnmounted(() => {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        z-index: vars.$zIndex-modal;
-        text-align: center;
-        background: white;
-        padding: var(--scale-8r);
-        border-radius: var(--scale-2r);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        z-index: vars.$zIndex-floating;
+    }
+
+    &__loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--scale-4r);
+        padding: var(--scale-4r);
     }
 
     &__loading-text {
-        margin-top: var(--scale-4r);
         color: var(--color-description);
-        font-size: var(--scale-4r);
-    }
-
-    &__spinner {
-        border: 4px solid var(--blue-100);
-        border-top: 4px solid var(--color-primary);
-        border-radius: 50%;
-        width: var(--scale-10r);
-        height: var(--scale-10r);
-        @include animations.spin;
-        margin: 0 auto;
     }
 }
 </style>
