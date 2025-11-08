@@ -7,6 +7,9 @@ export const routes: RouteRecordRaw[] = [
         path: '/',
         name: RouteName.HOME,
         component: () => import('@/views/home/Home.vue'),
+        meta: {
+            layout: EmptyLayout,
+        },
     },
     {
         path: '/:pathMatch(.*)*',
