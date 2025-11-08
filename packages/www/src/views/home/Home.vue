@@ -8,41 +8,72 @@ import 'leaflet/dist/leaflet.css';
 const { t } = useI18n();
 const mapContainer = ref<HTMLElement | null>(null);
 const isLoadingLocation = ref(true);
-let mapInstance: L.Map | null = null;
-let currentMarker: L.Marker | null = null;
-let hasUserLocation = false;
+const mapInstance = ref<L.Map | null>(null);
+const currentMarker = ref<L.Marker | null>(null);
+const hasUserLocation = ref(false);
 
-const updateMapLocation = (lat: number, lng: number, isUserLocation = false) => {
-    if (!mapInstance) return;
-
-    mapInstance.setView([lat, lng], 13);
-
-    if (currentMarker) {
-        currentMarker.remove();
+onMounted(() => {
+    if (!mapContainer.value) {
+        return;
     }
 
-    currentMarker = L.marker([lat, lng]).addTo(mapInstance);
-    currentMarker.bindPopup(`<b>${t('map.yourLocation')}</b>`).openPopup();
+    requestGeolocation();
+    initPermissionWatcher();
+});
 
-    hasUserLocation = isUserLocation;
-    isLoadingLocation.value = false;
-};
+onUnmounted(() => {
+    if (mapInstance.value) {
+        mapInstance.value.remove();
+        mapInstance.value = null;
+    }
+});
 
 const initMap = (lat: number, lng: number, isUserLocation = false) => {
     if (!mapContainer.value) return;
 
-    mapInstance = L.map(mapContainer.value).setView([lat, lng], 13);
+    mapInstance.value = L.map(mapContainer.value).setView([lat, lng], 13);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        maxZoom: 20,
-    }).addTo(mapInstance);
+    L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        {
+            attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            maxZoom: 20,
+        },
+    ).addTo(mapInstance.value as L.Map);
 
-    currentMarker = L.marker([lat, lng]).addTo(mapInstance);
-    currentMarker.bindPopup(`<b>${t('map.yourLocation')}</b>`).openPopup();
+    currentMarker.value = L.marker([lat, lng]).addTo(
+        mapInstance.value as L.Map,
+    );
+    currentMarker.value
+        .bindPopup(`<b>${t('map.yourLocation')}</b>`)
+        .openPopup();
 
-    hasUserLocation = isUserLocation;
+    hasUserLocation.value = isUserLocation;
+    isLoadingLocation.value = false;
+};
+
+const updateMapLocation = (
+    lat: number,
+    lng: number,
+    isUserLocation = false,
+) => {
+    if (!mapInstance.value) return;
+
+    mapInstance.value.setView([lat, lng], 13);
+
+    if (currentMarker.value) {
+        currentMarker.value.remove();
+    }
+
+    currentMarker.value = L.marker([lat, lng]).addTo(
+        mapInstance.value as L.Map,
+    );
+    currentMarker.value
+        .bindPopup(`<b>${t('map.yourLocation')}</b>`)
+        .openPopup();
+
+    hasUserLocation.value = isUserLocation;
     isLoadingLocation.value = false;
 };
 
@@ -51,7 +82,7 @@ const requestGeolocation = () => {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
-                if (mapInstance && !hasUserLocation) {
+                if (mapInstance.value && !hasUserLocation.value) {
                     updateMapLocation(latitude, longitude, true);
                 } else {
                     initMap(latitude, longitude, true);
@@ -65,7 +96,7 @@ const requestGeolocation = () => {
                     toast.error(t('map.geolocationError'));
                 }
                 isLoadingLocation.value = false;
-                if (!mapInstance) {
+                if (!mapInstance.value) {
                     initMap(48.8566, 2.3522, false);
                 }
             },
@@ -78,7 +109,7 @@ const requestGeolocation = () => {
     } else {
         toast.error(t('map.geolocationNotSupported'));
         isLoadingLocation.value = false;
-        if (!mapInstance) {
+        if (!mapInstance.value) {
             initMap(48.8566, 2.3522, false);
         }
     }
@@ -87,15 +118,20 @@ const requestGeolocation = () => {
 const initPermissionWatcher = async () => {
     if ('permissions' in navigator) {
         try {
-            const permission = await navigator.permissions.query({ name: 'geolocation' });
+            const permission = await navigator.permissions.query({
+                name: 'geolocation',
+            });
             permission.addEventListener('change', () => {
-                if (permission.state === 'granted' && !hasUserLocation) {
+                if (permission.state === 'granted' && !hasUserLocation.value) {
                     isLoadingLocation.value = true;
                     requestGeolocation();
-                } else if (permission.state === 'denied' && hasUserLocation) {
-                    hasUserLocation = false;
+                } else if (
+                    permission.state === 'denied' &&
+                    hasUserLocation.value
+                ) {
+                    hasUserLocation.value = false;
                     toast.error(t('map.geolocationDenied'));
-                    if (mapInstance && currentMarker) {
+                    if (mapInstance.value && currentMarker.value) {
                         updateMapLocation(48.8566, 2.3522, false);
                     }
                 }
@@ -105,20 +141,6 @@ const initPermissionWatcher = async () => {
         }
     }
 };
-
-onMounted(() => {
-    if (!mapContainer.value) return;
-
-    requestGeolocation();
-    initPermissionWatcher();
-});
-
-onUnmounted(() => {
-    if (mapInstance) {
-        mapInstance.remove();
-        mapInstance = null;
-    }
-});
 </script>
 
 <template>
@@ -132,10 +154,19 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
+@use '@/libs/sass/animations';
+@use '@/libs/sass/vars';
+
 .home-map {
-    width: 100%;
+    width: 100vw;
     height: 100vh;
-    position: relative;
+    height: 100dvh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 
     &__container {
         width: 100%;
@@ -147,37 +178,28 @@ onUnmounted(() => {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        z-index: 1000;
+        z-index: vars.$zIndex-modal;
         text-align: center;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 2rem;
-        border-radius: 8px;
+        background: white;
+        padding: var(--scale-8r);
+        border-radius: var(--scale-2r);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     &__loading-text {
-        margin-top: 1rem;
-        color: #333;
-        font-size: 1rem;
+        margin-top: var(--scale-4r);
+        color: var(--color-description);
+        font-size: var(--scale-4r);
     }
 
     &__spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
+        border: 4px solid var(--blue-100);
+        border-top: 4px solid var(--color-primary);
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: home-map-spin 1s linear infinite;
+        width: var(--scale-10r);
+        height: var(--scale-10r);
+        @include animations.spin;
         margin: 0 auto;
-    }
-}
-
-@keyframes home-map-spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
     }
 }
 </style>
