@@ -5,8 +5,10 @@ import { toast } from 'vue3-toastify';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import { useUserPhoto } from '@/composables/useUserPhoto';
 
 const { t } = useI18n();
+const { setUserPhoto } = useUserPhoto();
 
 const videoElement = ref<HTMLVideoElement | null>(null);
 const canvasElement = ref<HTMLCanvasElement | null>(null);
@@ -15,6 +17,10 @@ const capturedImage = ref<string | null>(null);
 const isCameraActive = ref(false);
 const isLoading = ref(false);
 const showDialog = ref(false);
+
+onUnmounted(() => {
+    stopCamera();
+});
 
 const openCamera = () => {
     showDialog.value = true;
@@ -99,6 +105,9 @@ const retakePhoto = () => {
 };
 
 const closeCamera = () => {
+    if (capturedImage.value) {
+        setUserPhoto(capturedImage.value);
+    }
     capturedImage.value = null;
     stopCamera();
     showDialog.value = false;
@@ -111,10 +120,6 @@ watch(showDialog, (newVal) => {
         stopCamera();
         capturedImage.value = null;
     }
-});
-
-onUnmounted(() => {
-    stopCamera();
 });
 </script>
 
@@ -155,7 +160,6 @@ onUnmounted(() => {
                     muted
                 />
                 <Button
-                    class="camera-capture__capture-button"
                     :label="t('camera.takePhoto')"
                     icon="pi pi-camera"
                     @click="capturePhoto"
@@ -217,9 +221,10 @@ onUnmounted(() => {
     }
 
     &__video-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--scale-4r);
     }
 
     &__video {
@@ -229,13 +234,6 @@ onUnmounted(() => {
         object-fit: contain;
         border-radius: var(--scale-2r);
         background: black;
-    }
-
-    &__capture-button {
-        position: absolute !important;
-        bottom: var(--scale-8r) !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
     }
 
     &__preview {

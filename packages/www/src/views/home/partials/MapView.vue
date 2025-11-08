@@ -1,18 +1,36 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue3-toastify';
 import Card from 'primevue/card';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import { useUserPhoto } from '@/composables/useUserPhoto';
 
 const { t } = useI18n();
+const { userPhoto } = useUserPhoto();
 const mapContainer = ref<HTMLElement | null>(null);
 const isLoadingLocation = ref(true);
 const mapInstance = ref<L.Map | null>(null);
 const currentMarker = ref<L.Marker | null>(null);
 const hasUserLocation = ref(false);
+
+onMounted(() => {
+    if (!mapContainer.value) {
+        return;
+    }
+
+    requestGeolocation();
+    initPermissionWatcher();
+});
+
+onUnmounted(() => {
+    if (mapInstance.value) {
+        mapInstance.value.remove();
+        mapInstance.value = null;
+    }
+});
 
 const initMap = (lat: number, lng: number, isUserLocation = false) => {
     if (!mapContainer.value) return;
@@ -28,15 +46,29 @@ const initMap = (lat: number, lng: number, isUserLocation = false) => {
         },
     ).addTo(mapInstance.value as L.Map);
 
-    currentMarker.value = L.marker([lat, lng]).addTo(
+    const icon = createMarkerIcon(userPhoto.value);
+    const markerOptions = icon ? { icon } : {};
+
+    currentMarker.value = L.marker([lat, lng], markerOptions).addTo(
         mapInstance.value as L.Map,
     );
-    currentMarker.value
-        .bindPopup(`<b>${t('map.yourLocation')}</b>`)
-        .openPopup();
 
     hasUserLocation.value = isUserLocation;
     isLoadingLocation.value = false;
+};
+
+const createMarkerIcon = (photo?: string | null) => {
+    if (photo) {
+        return L.divIcon({
+            html: `<div style="width: var(--scale-20r); height: var(--scale-20r); border-radius: 50%; overflow: hidden; border: var(--scale-1r) solid var(--color-primary); background: white;">
+                <img src="${photo}" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>`,
+            className: '',
+            iconSize: [80, 80],
+            iconAnchor: [40, 40],
+        });
+    }
+    return undefined;
 };
 
 const updateMapLocation = (
@@ -52,12 +84,12 @@ const updateMapLocation = (
         currentMarker.value.remove();
     }
 
-    currentMarker.value = L.marker([lat, lng]).addTo(
+    const icon = createMarkerIcon(userPhoto.value);
+    const markerOptions = icon ? { icon } : {};
+
+    currentMarker.value = L.marker([lat, lng], markerOptions).addTo(
         mapInstance.value as L.Map,
     );
-    currentMarker.value
-        .bindPopup(`<b>${t('map.yourLocation')}</b>`)
-        .openPopup();
 
     hasUserLocation.value = isUserLocation;
     isLoadingLocation.value = false;
@@ -121,24 +153,21 @@ const initPermissionWatcher = async () => {
                     }
                 }
             });
-        } catch {
-        }
+        } catch {}
     }
 };
 
-onMounted(() => {
-    if (!mapContainer.value) {
-        return;
-    }
+watch(userPhoto, (newPhoto) => {
+    if (currentMarker.value && mapInstance.value) {
+        const position = currentMarker.value.getLatLng();
+        currentMarker.value.remove();
 
-    requestGeolocation();
-    initPermissionWatcher();
-});
+        const icon = createMarkerIcon(newPhoto);
+        const markerOptions = icon ? { icon } : {};
 
-onUnmounted(() => {
-    if (mapInstance.value) {
-        mapInstance.value.remove();
-        mapInstance.value = null;
+        currentMarker.value = L.marker(position, markerOptions).addTo(
+            mapInstance.value as L.Map,
+        );
     }
 });
 </script>
@@ -162,7 +191,6 @@ onUnmounted(() => {
     "fr": {
         "map": {
             "loading": "Obtention de votre position...",
-            "yourLocation": "Votre position",
             "geolocationError": "Impossible d'obtenir votre position",
             "geolocationDenied": "Accès à la géolocalisation refusé",
             "geolocationNotSupported": "Géolocalisation non supportée par votre navigateur"
