@@ -49,7 +49,7 @@ initRouter().then((router) => {
     app.use(router);
     app.use(Vue3Toastify, {
         autoClose: 3000,
-        position: toast.POSITION.BOTTOM_CENTER,
+        position: toast.POSITION.TOP_CENTER,
         transition: toast.TRANSITIONS.SLIDE,
     } as ToastContainerOptions);
 
