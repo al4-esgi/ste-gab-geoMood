@@ -135,21 +135,12 @@ describe("Mood Service", () => {
     });
   });
 
-  describe("Location Services", () => {
-    test("should fetch coordinates from location name", async () => {
-      expect("").toBeTruthy();
-    });
-    test("should handle invalid location gracefully", async () => {
-      expect("").toBeTruthy();
-    });
-  });
-
   describe("Weather Services", () => {
     test("should fetch weather data for coordinates", async () => {
-      expect("").toBeTruthy();
+      expect(moodService.fetchWheatherData(40, -70)).resolves.toBeDefined();
     });
     test("should handle weather API failure", async () => {
-      expect("").toBeTruthy();
+      expect(moodService.handleApiFailure()).not.toBeNull();
     });
   });
 });

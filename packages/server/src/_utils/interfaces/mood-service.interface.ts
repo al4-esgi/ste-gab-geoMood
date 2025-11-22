@@ -8,4 +8,7 @@ export interface ICreateMoodInputDto {
   location: LocationDto;
 }
 
-export interface IMoodService {}
+export interface IMoodService {
+  fetchWheatherData(lat: number, lng: number): Promise<any>;
+  handleApiFailure(): Promise<any>;
+}
