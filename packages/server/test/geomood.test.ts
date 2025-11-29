@@ -1,3 +1,4 @@
+import { HttpModule } from "@nestjs/axios";
 import { Test, TestingModule } from "@nestjs/testing";
 import { validate } from "class-validator";
 import { MemoryStoredFile } from "nestjs-form-data";
@@ -25,6 +26,7 @@ describe("Mood Service", () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [HttpModule],
       providers: [MockMoodService],
     }).compile();
     moodService = module.get<IMoodService>(MockMoodService);
