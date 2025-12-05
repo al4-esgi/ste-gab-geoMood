@@ -1,3 +1,4 @@
+import { HttpModule, HttpService } from "@nestjs/axios";
 import { Test, TestingModule } from "@nestjs/testing";
 import { validate } from "class-validator";
 import { MemoryStoredFile } from "nestjs-form-data";
@@ -6,6 +7,7 @@ import { CreateMoodDto } from "src/moods/dto/request/create-mood.dto";
 import { beforeEach, describe, expect, it, test } from "vitest";
 import { LocationDto } from "../src/moods/dto/request/location.dto";
 import { MockMoodService } from "./mocks/mood-service.mock";
+import { ConfigService } from "@nestjs/config";
 
 /*
 ### 1. Data Collection
@@ -25,7 +27,8 @@ describe("Mood Service", () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [MockMoodService],
+      imports: [HttpModule],
+      providers: [MockMoodService, HttpService, ConfigService],
     }).compile();
     moodService = module.get<IMoodService>(MockMoodService);
     mockCreateMoodDto.textContent = "I feel happy";

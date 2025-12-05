@@ -11,8 +11,8 @@ import { WeatherResponseDto } from "src/moods/dto/response/Weather-api.dto";
 @Injectable()
 export class MockMoodService implements IMoodService {
   constructor(
-    private readonly httpService: HttpService,
-    private readonly configService: ConfigService<EnvironmentVariables, true>
+    public readonly httpService: HttpService,
+    public readonly configService: ConfigService<EnvironmentVariables, true>
   ) {}
 
   async fetchWheatherData(
@@ -25,8 +25,6 @@ export class MockMoodService implements IMoodService {
     const result = await this.httpService.axiosRef.get<WeatherResponseDto>(
       `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lng}&appid=${wheatherApiKey}`
     );
-
-    console.error(result);
 
     return result.data;
   }
