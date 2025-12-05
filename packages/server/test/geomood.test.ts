@@ -2,11 +2,13 @@ import { HttpModule } from "@nestjs/axios";
 import { Test, TestingModule } from "@nestjs/testing";
 import { validate } from "class-validator";
 import { MemoryStoredFile } from "nestjs-form-data";
-import { IMoodService } from "src/_utils/interfaces/mood-service.interface";
 import { CreateMoodDto } from "src/moods/dto/request/create-mood.dto";
 import { beforeEach, describe, expect, it, test } from "vitest";
 import { LocationDto } from "../src/moods/dto/request/location.dto";
 import { MockMoodService } from "./mocks/mood-service.mock";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { IMoodService } from "src/_utils/interfaces/mood-service.interface";
+import { WeatherApiResponseDto } from "src/moods/dto/response/weather-api-response.dto";
 
 /*
 ### 1. Data Collection
@@ -26,10 +28,24 @@ describe("Mood Service", () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule],
+      imports: [
+        HttpModule,
+        ConfigModule.forRoot({
+          envFilePath: [".env"],
+          load: [
+            () => ({
+              Weather: {
+                WHEATHER_API_KEY: process.env.WHEATHER_API_KEY,
+              },
+            }),
+          ],
+        }),
+      ],
       providers: [MockMoodService],
     }).compile();
+
     moodService = module.get<IMoodService>(MockMoodService);
+
     mockCreateMoodDto.textContent = "I feel happy";
     mockCreateMoodDto.rating = 4;
     mockLocationDto.lat = 40;
@@ -37,11 +53,9 @@ describe("Mood Service", () => {
     mockCreateMoodDto.location = mockLocationDto;
     const validFile = new MemoryStoredFile();
     validFile.originalName = "photo.jpg";
-    validFile.setFileTypeResult({
-      ext: "jpg",
-      mime: "image/jpeg",
-    });
+    validFile.setFileTypeResult({ ext: "jpg", mime: "image/jpeg" });
     validFile.size = 1024;
+
     validFile.buffer = Buffer.from("test");
     mockCreateMoodDto.picture = validFile;
   });
@@ -139,10 +153,12 @@ describe("Mood Service", () => {
 
   describe("Weather Services", () => {
     test("should fetch weather data for coordinates", async () => {
-      expect(moodService.fetchWheatherData(40, -70)).resolves.toBeDefined();
+      await expect(
+        moodService.fetchWeatherData(43.296398, 5.37)
+      ).resolves.toBeDefined();
     });
     test("should handle weather API failure", async () => {
-      expect(moodService.handleApiFailure()).not.toBeNull();
+      expect(moodService.handleApiFailure()).toBeDefined();
     });
   });
 });
