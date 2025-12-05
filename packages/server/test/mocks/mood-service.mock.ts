@@ -6,7 +6,7 @@ import {
   WeatherConfig,
 } from "src/_utils/config/env.config";
 import { IMoodService } from "src/_utils/interfaces/mood-service.interface";
-import { WeatherResponseDto } from "src/moods/dto/response/Weather-api.dto";
+import { WeatherApiResponseDto } from "src/moods/dto/response/weather-api-response.dto";
 
 @Injectable()
 export class MockMoodService implements IMoodService {
@@ -15,14 +15,14 @@ export class MockMoodService implements IMoodService {
     public readonly configService: ConfigService<EnvironmentVariables, true>
   ) {}
 
-  async fetchWheatherData(
+  async fetchWeatherData(
     lat: number,
     lng: number
-  ): Promise<WeatherResponseDto> {
+  ): Promise<WeatherApiResponseDto> {
     const wheatherApiKey =
       this.configService.get<WeatherConfig>("Weather").WHEATHER_API_KEY;
 
-    const result = await this.httpService.axiosRef.get<WeatherResponseDto>(
+    const result = await this.httpService.axiosRef.get<WeatherApiResponseDto>(
       `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lng}&appid=${wheatherApiKey}`
     );
 
@@ -30,12 +30,12 @@ export class MockMoodService implements IMoodService {
   }
 
   async handleApiFailure() {
-    return new WeatherResponseDto();
+    return new WeatherApiResponseDto();
   }
 
-  getWheather(lat: number, lon: number): Promise<WeatherResponseDto> {
+  async getWeather(lat: number, lon: number): Promise<WeatherApiResponseDto> {
     try {
-      return this.fetchWheatherData(lat, lon);
+      return await this.fetchWeatherData(lat, lon);
     } catch (error) {
       return this.handleApiFailure();
     }
