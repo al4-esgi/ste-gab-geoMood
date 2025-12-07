@@ -1,10 +1,10 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GenerativeModel } from '@google/generative-ai'
 import { HttpService } from '@nestjs/axios'
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { GeminiConfig } from '../_utils/config/env.config'
 import { IMoodService } from '../_utils/interfaces/mood-service.interface'
 import { AnalysisRating, MoodRating } from '../_utils/types/mood-rating'
+import { GEMINI_PRO_MODEL_TOKEN, GEMINI_PROMPT } from './_utils/constants'
 import { WeatherApiResponseDto } from './_utils/dto/response/weather-api-response.dto'
 
 @Injectable()
@@ -12,6 +12,7 @@ export class MoodsService implements IMoodService {
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    @Inject(GEMINI_PRO_MODEL_TOKEN) private readonly geminiModel: GenerativeModel,
   ) {}
 
   fetchWeatherData(lat: number, lng: number): Promise<WeatherApiResponseDto> {
@@ -28,10 +29,8 @@ export class MoodsService implements IMoodService {
   }
 
   async getTextSentimentAnalysis(userInput: string): Promise<number> {
-    const genAI = new GoogleGenerativeAI(this.configService.get<GeminiConfig>('GEMINI').GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro-latest' })
-    const prompt = `Analyze the sentiment of the sentence given below.\n${userInput}\nThe output should be in the format- Semtiment: Value where the value should be a integer between 0 and 5`
-    const result = await model.generateContent(prompt)
+    const prompt = GEMINI_PROMPT + userInput
+    const result = await this.geminiModel.generateContent(prompt)
     const response = result.response
     const score = response.candidates[0].content.parts[0].text.split(':')[1]
     return parseInt(score, 10)

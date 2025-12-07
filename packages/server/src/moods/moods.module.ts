@@ -1,11 +1,13 @@
+import { HttpModule } from '@nestjs/axios'
 import { Global, Module } from '@nestjs/common'
+import { moodsProviders } from './moods.provider'
 import { MoodsService } from './moods.service'
 
 @Global()
 @Module({
-  imports: [],
+  imports: [HttpModule],
   controllers: [],
-  providers: [MoodsService],
+  providers: [MoodsService, ...moodsProviders],
   exports: [MoodsService],
 })
-export class AgnoModule {}
+export class MoodsModule {}

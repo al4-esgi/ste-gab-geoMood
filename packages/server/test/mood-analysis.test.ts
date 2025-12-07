@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { validateEnv } from '../src/_utils/config/env.config'
 import { AnalysisRating, MoodRating } from '../src/_utils/types/mood-rating'
 import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/moods/dto/response/weather-api-response.dto'
+import { MoodsModule } from '../src/moods/moods.module'
 import { MoodsService } from '../src/moods/moods.service'
 
 /*
@@ -26,6 +27,7 @@ describe('Mood Analysis', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        MoodsModule,
         HttpModule,
         ConfigModule.forRoot({
           validate: validateEnv,
@@ -33,7 +35,6 @@ describe('Mood Analysis', () => {
           envFilePath: ['.env.development', '.env'],
         }),
       ],
-      providers: [MoodsService],
     }).compile()
     moodService = module.get(MoodsService)
     httpService = module.get(HttpService)
