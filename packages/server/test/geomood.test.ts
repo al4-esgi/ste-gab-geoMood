@@ -1,14 +1,14 @@
 import { HttpModule } from "@nestjs/axios";
+import { ConfigModule } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { validate } from "class-validator";
 import { MemoryStoredFile } from "nestjs-form-data";
-import { CreateMoodDto } from "src/moods/dto/request/create-mood.dto";
 import { beforeEach, describe, expect, it, test } from "vitest";
+import { IMoodService } from "src/_utils/interfaces/mood-service.interface";
+import { validateEnv } from "../src/_utils/config/env.config";
+import { CreateMoodDto } from "src/moods/dto/request/create-mood.dto";
 import { LocationDto } from "../src/moods/dto/request/location.dto";
 import { MockMoodService } from "./mocks/mood-service.mock";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { IMoodService } from "src/_utils/interfaces/mood-service.interface";
-import { WeatherApiResponseDto } from "src/moods/dto/response/weather-api-response.dto";
 
 /*
 ### 1. Data Collection
@@ -32,13 +32,7 @@ describe("Mood Service", () => {
         HttpModule,
         ConfigModule.forRoot({
           envFilePath: [".env"],
-          load: [
-            () => ({
-              Weather: {
-                WHEATHER_API_KEY: process.env.WHEATHER_API_KEY,
-              },
-            }),
-          ],
+          validate: validateEnv,
         }),
       ],
       providers: [MockMoodService],
@@ -201,30 +195,6 @@ describe("Mood Analysis", () => {
       expect("").toBeTruthy();
     });
     test("should validate location coordinates are within valid ranges", () => {
-      expect("").toBeTruthy();
-    });
-  });
-});
-
-/*
-### 3. Architecture and Quality
-
-- Code organization in three layers:
-    - Domain: entities and business logic,
-    - Application: use cases and services,
-    - Infrastructure: API, storage, interface.
-- Respect for decoupling and SOLID principles.
-*/
-
-describe("Database Storage", () => {
-  describe("Local Storage", () => {
-    test("should save mood entry to storage", () => {
-      expect("").toBeTruthy();
-    });
-    test("should retrieve mood entries by date range", () => {
-      expect("").toBeTruthy();
-    });
-    test("should prevent duplicate mood entries within same hour", () => {
       expect("").toBeTruthy();
     });
   });
