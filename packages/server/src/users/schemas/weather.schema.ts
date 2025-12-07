@@ -1,21 +1,21 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 
 @Schema({ _id: false })
 export class Weather {
   @Prop({ required: true })
-  temperature: number;
+  temperature: number
 
   @Prop({ required: true })
-  condition: string;
+  condition: string
 
   @Prop({ required: true })
-  humidity: number;
+  humidity: number
 
   @Prop({ required: true })
-  pressure: number;
+  pressure: number
 
   @Prop({ required: true })
-  windSpeed: number;
+  windSpeed: number
 }
 
-export const WeatherSchema = SchemaFactory.createForClass(Weather);
+export const WeatherSchema = SchemaFactory.createForClass(Weather)

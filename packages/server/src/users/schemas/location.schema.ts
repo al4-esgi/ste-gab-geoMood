@@ -1,12 +1,12 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 
 @Schema({ _id: false })
 export class Location {
   @Prop({ required: true, min: -90, max: 90 })
-  lat: number;
+  lat: number
 
   @Prop({ required: true, min: -180, max: 180 })
-  lng: number;
+  lng: number
 }
 
-export const LocationSchema = SchemaFactory.createForClass(Location);
+export const LocationSchema = SchemaFactory.createForClass(Location)

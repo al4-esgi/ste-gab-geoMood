@@ -1,4 +1,3 @@
-import { validateEnv } from "../src/_utils/config/env.config";
 import { HttpModule } from '@nestjs/axios'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -7,6 +6,7 @@ import { MemoryStoredFile } from 'nestjs-form-data'
 import { IMoodService } from 'src/_utils/interfaces/mood-service.interface'
 import { CreateMoodDto } from 'src/moods/dto/request/create-mood.dto'
 import { beforeEach, describe, expect, it, test } from 'vitest'
+import { validateEnv } from '../src/_utils/config/env.config'
 import { LocationDto } from '../src/moods/dto/request/location.dto'
 import { MockMoodService } from './mocks/mood-service.mock'
 
@@ -31,7 +31,7 @@ describe('Mood Service', () => {
       imports: [
         HttpModule,
         ConfigModule.forRoot({
-          envFilePath: [".env"],
+          envFilePath: ['.env'],
           validate: validateEnv,
         }),
       ],
@@ -145,15 +145,12 @@ describe('Mood Service', () => {
     })
   })
 
-  describe("Weather Services", () => {
-    test("should fetch weather data for coordinates", async () => {
-      await expect(
-        moodService.fetchWeatherData(43.296398, 5.37)
-      ).resolves.toBeDefined();
-    });
-    test("should handle weather API failure", async () => {
-      expect(moodService.handleApiFailure()).toBeDefined();
-    });
-  });
-});
-
+  describe('Weather Services', () => {
+    test('should fetch weather data for coordinates', async () => {
+      await expect(moodService.fetchWeatherData(43.296398, 5.37)).resolves.toBeDefined()
+    })
+    test('should handle weather API failure', async () => {
+      expect(moodService.handleApiFailure()).toBeDefined()
+    })
+  })
+})

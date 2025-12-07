@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
-import { GetFileDto, GetMinioFileDto } from './_utils/dto/response/get-minio-file.dto';
-import { MinioFile } from './minio-file.schema';
-import { MinioService } from './minio.service';
+import { Injectable } from '@nestjs/common'
+import { DateTime } from 'luxon'
+import { GetFileDto, GetMinioFileDto } from './_utils/dto/response/get-minio-file.dto'
+import { MinioService } from './minio.service'
+import { MinioFile } from './minio-file.schema'
 
 @Injectable()
 export class MinioMapper {
@@ -13,25 +13,25 @@ export class MinioMapper {
     fileName: minioFile.fileName,
     mimeType: minioFile.mimeType,
     size: minioFile.size,
-  });
+  })
 
   toGetFileDto = async (minioFile: MinioFile): Promise<GetFileDto> => ({
     url: await this.minioService.getPresignedUrl(minioFile.key),
     fileName: minioFile.fileName,
     mimeType: minioFile.mimeType,
     size: minioFile.size,
-  });
+  })
 
-  toOrganizationCoverImageKey = (organizationId: string) => `organization/${organizationId}/coverImage`;
+  toOrganizationCoverImageKey = (organizationId: string) => `organization/${organizationId}/coverImage`
 
   toAgentCoverImageKey = (organizationId: string, agentId: string): string =>
-    `${organizationId}/agents-cover-images/${agentId}.png`;
+    `${organizationId}/agents-cover-images/${agentId}.png`
 
-  toImageOriginalName = (agentId: string): string => `${agentId}.png`;
+  toImageOriginalName = (agentId: string): string => `${agentId}.png`
 
   toChatMessageAttachmentFileKey = (chatMessageId: string): string =>
-    `chat-message/${chatMessageId}/attachment-${DateTime.now().toMillis()}`;
+    `chat-message/${chatMessageId}/attachment-${DateTime.now().toMillis()}`
 
   toAgentToolFileKey = (organizationId: string, agentId: string): string =>
-    `${organizationId}/agents/${agentId}/tools/${DateTime.now().toMillis()}`;
+    `${organizationId}/agents/${agentId}/tools/${DateTime.now().toMillis()}`
 }
