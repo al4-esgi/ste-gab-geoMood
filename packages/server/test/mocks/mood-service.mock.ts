@@ -94,6 +94,22 @@ export class MockMoodService implements IMoodService {
     ratingWeather: AnalysisRating,
     ratingPhotoAnalysis?: AnalysisRating,
   ): MoodRating {
-    return null
+    if (ratingUserNumberInput < 1 || ratingUserNumberInput > 5) {
+      throw new Error('User rating must be between 1 and 5')
+    }
+
+    if (userSentimentAnalysis < 0 || userSentimentAnalysis > 5) {
+      throw new Error('Text sentiment rating must be between 0 and 5')
+    }
+
+    if (ratingWeather < 0 || ratingWeather > 5) {
+      throw new Error('Weather rating must be between 0 and 5')
+    }
+
+    if (ratingPhotoAnalysis < 0 || ratingPhotoAnalysis > 5) {
+      throw new Error('Photo rating must be between 0 and 5')
+    }
+
+    return new MoodRating(userSentimentAnalysis, ratingUserNumberInput, ratingWeather, ratingPhotoAnalysis)
   }
 }

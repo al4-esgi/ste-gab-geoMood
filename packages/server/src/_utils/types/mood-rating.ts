@@ -24,11 +24,11 @@ export class MoodRating implements IMoodRating {
     ratingWeather: AnalysisRating,
     ratingPhotoAnalysis?: AnalysisRating,
   ) {
-    this.ratingPhotoAnalysis = ratingPhotoAnalysis
+    this.ratingPhotoAnalysis = ratingPhotoAnalysis === undefined ? 0 : ratingPhotoAnalysis
     this.ratingUserNumberInput = ratingUserNumberInput
     this.ratingUserTextInput = ratingUserTextInput
     this.ratingWeather = ratingWeather
-    if (ratingPhotoAnalysis === undefined || ratingPhotoAnalysis === 0) {
+    if (this.ratingPhotoAnalysis === 0) {
       this.weight = {
         ratingUserTextInput: 0.33,
         ratingUserNumberInput: 0.34,

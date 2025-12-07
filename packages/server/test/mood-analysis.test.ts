@@ -279,10 +279,6 @@ describe('Mood Analysis', () => {
   })
 
   describe('Calculation Score', () => {
-    const weatherdata = new WeatherApiResponseDto()
-    const getAnalysisRating = (rating?: AnalysisRating): AnalysisRating =>
-      rating ? rating : ((Math.floor(Math.random() * 5) + 1) as AnalysisRating)
-
     test('should calculate final score from user rating, text sentiment, picture analysis, and weather data', () => {
       const userSentiment: AnalysisRating = 5
       const userRating: AnalysisRating = 5
@@ -339,14 +335,13 @@ describe('Mood Analysis', () => {
       const moodRating = moodService.createMoodScore(5, 5, 1, undefined)
 
       expect(moodRating).toBeInstanceOf(MoodRating)
-
       expect(moodRating.total).toBeGreaterThan(2)
       expect(moodRating.total).toBeLessThan(5)
     })
 
     test('should throw error for invalid user rating (too low)', () => {
       expect(() => {
-        moodService.createMoodScore(3, 0 as AnalysisRating, 3, 3)
+        moodService.createMoodScore(3, 0, 3, 3)
       }).toThrow('User rating must be between 1 and 5')
     })
 
