@@ -1,7 +1,7 @@
-import { exit } from 'node:process'
 import { Logger } from '@nestjs/common'
 import { plainToInstance, Type } from 'class-transformer'
 import { IsNumber, IsOptional, IsString, ValidateNested, validateSync } from 'class-validator'
+import { exit } from 'node:process'
 
 export class DatabaseConfig {
   @IsString()
@@ -34,6 +34,11 @@ export class WeatherConfig {
   WHEATHER_API_KEY: string
 }
 
+export class GeminiConfig {
+  @IsString()
+  GEMINI_API_KEY: string
+}
+
 export class ServerConfig {
   @IsNumber()
   PORT: number
@@ -58,6 +63,10 @@ export class EnvironmentVariables {
   @ValidateNested()
   @Type(() => WeatherConfig)
   Weather: WeatherConfig
+
+  @ValidateNested()
+  @Type(() => GeminiConfig)
+  GEMINI: GeminiConfig
 }
 
 export function validateEnv(config: Record<string, unknown>) {
@@ -80,6 +89,9 @@ export function validateEnv(config: Record<string, unknown>) {
     Weather: {
       WHEATHER_API_KEY: config.WHEATHER_API_KEY,
     },
+    GEMINI: {
+      GEMINI_API_KEY: config.GEMINI_API_KEY,
+    },
   }
 
   const validatedConfig = plainToInstance(EnvironmentVariables, structuredConfig, {
@@ -87,7 +99,7 @@ export function validateEnv(config: Record<string, unknown>) {
   })
 
   const errors = validateSync(validatedConfig, {
-    skipMissingProperties: true,
+    skipMissingProperties: false,
   })
 
   if (errors.length) {

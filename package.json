@@ -24,10 +24,11 @@
     "url": "https://github.com/al4-esgi/ste-gab-geoMood/issues"
   },
   "homepage": "https://github.com/al4-esgi/ste-gab-geoMood#readme",
-  "workspaces": ["./packages/*"],
+  "workspaces": [
+    "./packages/*"
+  ],
   "dependencies": {
     "@geomood/server": "0.0.0",
     "@geomood/www": "0.0.0"
-  },
-  "devDependencies": {}
+  }
 }
