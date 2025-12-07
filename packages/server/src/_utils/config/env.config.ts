@@ -21,9 +21,9 @@ export class MinioConfig {
   @IsString()
   MINIO_ENDPOINT: string;
 
-  @IsNumber()
   @IsOptional()
-  MINIO_PORT?: number | null;
+  @IsNumber()
+  MINIO_PORT?: number;
 
   @IsString()
   MINIO_ACCESS_KEY: string;
@@ -74,7 +74,7 @@ export function validateEnv(config: Record<string, unknown>) {
     },
     MINIO: {
       MINIO_ENDPOINT: config.MINIO_ENDPOINT,
-      MINIO_PORT: config.MINIO_PORT,
+      MINIO_PORT: config.MINIO_PORT || undefined,
       MINIO_ACCESS_KEY: config.MINIO_ACCESS_KEY,
       MINIO_SECRET_KEY: config.MINIO_SECRET_KEY,
       MINIO_BUCKET_NAME: config.MINIO_BUCKET_NAME,
@@ -97,7 +97,7 @@ export function validateEnv(config: Record<string, unknown>) {
   );
 
   const errors = validateSync(validatedConfig, {
-    skipMissingProperties: false,
+    skipMissingProperties: true,
   });
 
   if (errors.length) {
