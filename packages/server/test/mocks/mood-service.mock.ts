@@ -58,7 +58,34 @@ export class MockMoodService implements IMoodService {
   }
 
   getAnalysisRatingFromWeather(weatherResponse: WeatherApiResponseDto): AnalysisRating {
-    throw new Error('not implemented')
+    if (!weatherResponse.current) return 3
+
+    const current = weatherResponse.current
+    let score = 3
+
+    const tempCelsius = current.temp - 273.15
+    if (tempCelsius >= 18 && tempCelsius <= 25) {
+      score += 1
+    } else if (tempCelsius < 10 || tempCelsius > 30) {
+      score -= 1
+    }
+
+    if (current.clouds < 20) {
+      score += 1
+    } else if (current.clouds > 80) {
+      score -= 1
+    }
+
+    const weatherMain = current.weather?.[0]?.main?.toLowerCase()
+    if (weatherMain === 'clear') score += 0.5
+    if (weatherMain === 'rain') score -= 1
+    if (weatherMain === 'thunderstorm') score -= 1.5
+    if (weatherMain === 'snow') score -= 0.5
+
+    if (current.wind_speed > 10) score -= 0.5
+
+    const finalScore = Math.max(1, Math.min(5, Math.round(score)))
+    return finalScore as AnalysisRating
   }
 
   createMoodScore(
