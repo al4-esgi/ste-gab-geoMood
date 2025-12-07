@@ -48,7 +48,7 @@ describe("Mood Database Storage", () => {
 
   afterEach(async () => {
     if (testUser) {
-      await usersRepository.deleteMood(testUser._id.toString(), testUser._id.toString());
+      await usersRepository.deleteUser(testUser._id.toString());
     }
   });
 
