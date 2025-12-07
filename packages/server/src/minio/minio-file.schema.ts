@@ -1,21 +1,21 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 
 @Schema({ _id: false })
 export class MinioFile {
   @Prop({ required: true })
-  key: string;
+  key: string
 
   @Prop({ required: true })
-  fileName: string;
+  fileName: string
 
   @Prop({ required: true })
-  mimeType: string;
+  mimeType: string
 
   @Prop({ required: true })
-  createdAt: Date;
+  createdAt: Date
 
   @Prop({ required: true })
-  size: number;
+  size: number
 }
 
-export const MinioFileSchema = SchemaFactory.createForClass(MinioFile);
+export const MinioFileSchema = SchemaFactory.createForClass(MinioFile)

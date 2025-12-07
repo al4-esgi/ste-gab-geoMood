@@ -7,3 +7,11 @@
 3- Mise en place du système de prise de photo côté front-end
 4 – XP avec Steevy pour les premiers tests d’input et le début des tests de l’API météo
 5 – Finalisation des tests de l’API météo
+
+## Hoareau Steevy
+
+1. Mise en place du backend
+2. Initial Setup du framework de test
+3. XP avec Gabriel
+4. fix d'un bug d'injection de dépendance dû au bundler
+5. Red tests pour la creation d'un score utilisateur
