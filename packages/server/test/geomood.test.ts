@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { validate } from 'class-validator'
 import { MemoryStoredFile } from 'nestjs-form-data'
-import { IMoodService } from 'src/_utils/interfaces/mood-service.interface'
 import { CreateMoodDto } from 'src/moods/dto/request/create-mood.dto'
 import { beforeEach, describe, expect, it, test } from 'vitest'
 import { validateEnv } from '../src/_utils/config/env.config'
@@ -38,7 +37,7 @@ describe('Mood Service', () => {
       providers: [MockMoodService],
     }).compile()
 
-    moodService = module.get<IMoodService>(MockMoodService)
+    moodService = module.get(MockMoodService)
 
     mockCreateMoodDto.textContent = 'I feel happy'
     mockCreateMoodDto.rating = 4

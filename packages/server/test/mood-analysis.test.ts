@@ -1,11 +1,11 @@
-import { HttpModule } from '@nestjs/axios'
+import { HttpModule, HttpService } from '@nestjs/axios'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
-import { IMoodService } from 'src/_utils/interfaces/mood-service.interface'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { validateEnv } from '../src/_utils/config/env.config'
 import { AnalysisRating, MoodRating } from '../src/_utils/types/mood-rating'
 import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/moods/dto/response/weather-api-response.dto'
-import { MockMoodService } from './mocks/mood-service.mock'
+import { MoodsService } from '../src/moods/moods.service'
 
 /*
 ### 2. Mood Analysis
@@ -19,7 +19,8 @@ import { MockMoodService } from './mocks/mood-service.mock'
 */
 
 describe('Mood Analysis', () => {
-  let moodService: MockMoodService
+  let moodService: MoodsService
+  let httpService: HttpService
   const validRatings = [1, 2, 3, 4, 5]
 
   beforeEach(async () => {
@@ -27,50 +28,51 @@ describe('Mood Analysis', () => {
       imports: [
         HttpModule,
         ConfigModule.forRoot({
-          envFilePath: ['.env'],
-          load: [
-            () => ({
-              Weather: {
-                WHEATHER_API_KEY: process.env.WHEATHER_API_KEY,
-              },
-            }),
-          ],
+          validate: validateEnv,
+          isGlobal: true,
+          envFilePath: ['.env.development', '.env'],
         }),
       ],
-      providers: [MockMoodService],
+      providers: [MoodsService],
     }).compile()
-    moodService = module.get<IMoodService>(MockMoodService)
+    moodService = module.get(MoodsService)
+    httpService = module.get(HttpService)
   })
 
-  describe('Text Sentiment Analysis', () => {
-    const positiveUserInput = "Je me sens bien aujourd'hui"
-    const negativeUserInput = "Je me sens mal aujourd'hui"
-    const neutralUserInput = 'rien de spécial'
-    test('should analyze positive sentiment from positive text', async () => {
-      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
-      expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
-    })
+  describe(
+    'Text Sentiment Analysis',
+    () => {
+      const positiveUserInput = "Je me sens bien aujourd'hui"
+      const negativeUserInput = "Je me sens mal aujourd'hui"
+      const neutralUserInput = 'rien de spécial'
 
-    test('should analyze negative sentiment from negative text', async () => {
-      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
-      expect(sentimentAnalysis).toBeLessThan(4)
-    })
+      test('should analyze positive sentiment from positive text', async () => {
+        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
+        expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
+      })
 
-    test('should analyze neutral sentiment from neutral text', async () => {
-      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
-      expect(sentimentAnalysis).toBeLessThanOrEqual(4)
-      expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
-    })
+      test('should analyze negative sentiment from negative text', async () => {
+        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
+        expect(sentimentAnalysis).toBeLessThan(4)
+      })
 
-    test('handle ApPI error and return a fake value', async () => {
-      vi.spyOn(moodService.httpService.axiosRef, 'get').mockRejectedValueOnce(new Error('API is down'))
+      test('should analyze neutral sentiment from neutral text', async () => {
+        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
+        expect(sentimentAnalysis).toBeLessThanOrEqual(4)
+        expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
+      })
 
-      const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      test('handle ApPI error and return a fake value', async () => {
+        vi.spyOn(httpService.axiosRef, 'get').mockRejectedValueOnce(new Error('API is down'))
 
-      expect(result).toBeDefined()
-      expect(validRatings).toContain(result)
-    })
-  })
+        const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+
+        expect(result).toBeDefined()
+        expect(validRatings).toContain(result)
+      })
+    },
+    { timeout: 300000 },
+  )
 
   describe('MoodRating', () => {
     let rating: MoodRating
