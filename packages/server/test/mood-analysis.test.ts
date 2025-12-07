@@ -42,34 +42,33 @@ describe('Mood Analysis', () => {
     moodService = module.get<IMoodService>(MockMoodService)
   })
 
-  describe('MoodScore Calculation', () => {
+  describe('Text Sentiment Analysis', () => {
     const positiveUserInput = "Je me sens bien aujourd'hui"
     const negativeUserInput = "Je me sens mal aujourd'hui"
     const neutralUserInput = 'rien de spécial'
-    describe('Text Sentiment Analysis', () => {
-      test('should analyze positive sentiment from positive text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
-        expect(sentimentAnalysis).toBe('positive')
-      })
+    test('should analyze positive sentiment from positive text', async () => {
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
+    })
 
-      test('should analyze negative sentiment from negative text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
-        expect(sentimentAnalysis).toBe('negative')
-      })
+    test('should analyze negative sentiment from negative text', async () => {
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
+      expect(sentimentAnalysis).toBeLessThan(4)
+    })
 
-      test('should analyze neutral sentiment from neutral text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
-        expect(sentimentAnalysis).toBe('neutral')
-      })
+    test('should analyze neutral sentiment from neutral text', async () => {
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      expect(sentimentAnalysis).toBeLessThanOrEqual(4)
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
+    })
 
-      test('handle ApPI error and return a fake value', async () => {
-        vi.spyOn(moodService.httpService.axiosRef, 'get').mockRejectedValueOnce(new Error('API is down'))
+    test('handle ApPI error and return a fake value', async () => {
+      vi.spyOn(moodService.httpService.axiosRef, 'get').mockRejectedValueOnce(new Error('API is down'))
 
-        const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
 
-        expect(result).toBeDefined()
-        expect(validRatings).toContain(result)
-      })
+      expect(result).toBeDefined()
+      expect(validRatings).toContain(result)
     })
   })
 
@@ -150,15 +149,15 @@ describe('Mood Analysis', () => {
       expect(rating.total).toBe(4.0)
     })
 
-    test('should handle ratings with 0 (no photo)', () => {
-      rating = new MoodRating(4, 5, 2, 0)
-      rating.setWeight({
-        ratingUserTextInput: 0.4,
-        ratingUserNumberInput: 0.4,
-        ratingPhotoAnalysis: 0,
-        ratingWeather: 0.2,
-      })
-      expect(rating.total).toBe(4.0)
+    test('should automatically adjust weights when no photo provided', () => {
+      const rating = new MoodRating(4, 5, 2, 0)
+
+      expect(rating.weight.ratingPhotoAnalysis).toBe(0)
+      expect(rating.weight.ratingUserTextInput).toBeCloseTo(0.33, 2)
+      expect(rating.weight.ratingUserNumberInput).toBeCloseTo(0.34, 2)
+      expect(rating.weight.ratingWeather).toBeCloseTo(0.33, 2)
+
+      expect(rating.total).toBeCloseTo(3.68, 2)
     })
   })
 

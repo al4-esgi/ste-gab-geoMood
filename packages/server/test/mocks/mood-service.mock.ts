@@ -40,7 +40,21 @@ export class MockMoodService implements IMoodService {
   }
 
   async getTextSentimentAnalysis(userInput: string): Promise<AnalysisRating> {
-    return null
+    const text = userInput.toLowerCase().split(' ')
+    const positiveWords = ['bien', 'heureux', 'content', 'joyeux', 'super', 'génial']
+    const negativeWords = ['mal', 'triste', 'déprimé', 'anxieux', 'stressé']
+
+    let positiveCount = 0
+    let negativeCount = 0
+
+    for (const userWord of text) {
+      if (positiveWords.includes(userWord)) positiveCount++
+      if (negativeWords.includes(userWord)) negativeCount++
+    }
+
+    if (positiveCount > negativeCount) return 5
+    if (negativeCount > positiveCount) return 1
+    return 3
   }
 
   getAnalysisRatingFromWeather(weatherResponse: WeatherApiResponseDto): AnalysisRating {
