@@ -66,6 +66,38 @@ describe("Mood Database Storage", () => {
     });
   });
 
+  describe("Find Users", () => {
+    it("should find user by ID", async () => {
+      const foundUser = await usersRepository.findUserById(testUser._id.toString());
+
+      expect(foundUser).toBeDefined();
+      expect(foundUser!._id.toString()).toBe(testUser._id.toString());
+      expect(foundUser!.name).toBe(testUser.name);
+      expect(foundUser!.email).toBe(testUser.email);
+    });
+
+    it("should return null for non-existent user ID", async () => {
+      const fakeId = "507f1f77bcf86cd799439011";
+      const foundUser = await usersRepository.findUserById(fakeId);
+
+      expect(foundUser).toBeNull();
+    });
+
+    it("should find user by email", async () => {
+      const foundUser = await usersRepository.findUserByEmail(testUser.email);
+
+      expect(foundUser).toBeDefined();
+      expect(foundUser!._id.toString()).toBe(testUser._id.toString());
+      expect(foundUser!.email).toBe(testUser.email);
+    });
+
+    it("should return null for non-existent email", async () => {
+      const foundUser = await usersRepository.findUserByEmail("nonexistent@example.com");
+
+      expect(foundUser).toBeNull();
+    });
+  });
+
   describe("Save Mood to User", () => {
     it("should save mood to user's array", async () => {
       const mood = {
