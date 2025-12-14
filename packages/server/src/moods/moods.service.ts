@@ -67,7 +67,6 @@ export class MoodsService implements IMoodService {
       const response = result.response.text()
       const llmResponse = decodeLlmResponse(response)
 
-      // Validate score bounds (defensive check)
       if (llmResponse.score < 1 || llmResponse.score > 5) {
         this.logger.error(`Vision API returned out-of-bounds score: ${llmResponse.score}`)
         return 3
