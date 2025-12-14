@@ -1,10 +1,13 @@
-import { HttpModule, HttpService } from '@nestjs/axios'
+import { HttpModule } from '@nestjs/axios'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
+import { MemoryStoredFile } from 'nestjs-form-data'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { validateEnv } from '../src/_utils/config/env.config'
 import { AnalysisRating, MoodRating } from '../src/_utils/types/mood-rating'
-import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/moods/dto/response/weather-api-response.dto'
+import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/moods/_utils/dto/response/weather-api-response.dto'
 import { MoodsModule } from '../src/moods/moods.module'
 import { MoodsService } from '../src/moods/moods.service'
 
@@ -12,16 +15,15 @@ import { MoodsService } from '../src/moods/moods.service'
 ### 2. Mood Analysis
 
 - Calculate MoodScore combining:
-    - user text and rating,
-    - real weather data,
-    - and, if possible, AI analysis (Vision API or Natural Language API).
+	- user text and rating,
+	- real weather data,
+	- and, if possible, AI analysis (Vision API or Natural Language API).
 
 💡 If AI integration is not possible, a dictionary or simple rule can replace the analysis.
 */
 
 describe('Mood Analysis', () => {
   let moodService: MoodsService
-  let httpService: HttpService
   const validRatings = [1, 2, 3, 4, 5]
 
   beforeEach(async () => {
@@ -37,43 +39,147 @@ describe('Mood Analysis', () => {
       ],
     }).compile()
     moodService = module.get(MoodsService)
-    httpService = module.get(HttpService)
   })
 
-  describe(
-    'Text Sentiment Analysis',
-    () => {
-      const positiveUserInput = "Je me sens bien aujourd'hui"
-      const negativeUserInput = "Je me sens mal aujourd'hui"
-      const neutralUserInput = 'rien de spécial'
+  describe('Text Sentiment Analysis', { timeout: 300000 }, () => {
+    const positiveUserInput = "Je me sens bien aujourd'hui"
+    const negativeUserInput = "Je me sens mal aujourd'hui"
+    const neutralUserInput = 'rien de spécial'
 
-      test('should analyze positive sentiment from positive text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
-        expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
+    test('should analyze positive sentiment from positive text', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
+      expect(loggerSpy).not.toHaveBeenCalled()
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
+    })
+
+    test('should analyze negative sentiment from negative text', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
+      expect(loggerSpy).not.toHaveBeenCalled()
+      expect(sentimentAnalysis).toBeLessThan(4)
+    })
+
+    test('should analyze neutral sentiment from neutral text', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      expect(loggerSpy).not.toHaveBeenCalled()
+      expect(sentimentAnalysis).toBeLessThanOrEqual(4)
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
+    })
+
+    test('should return fallback score when LLM response is not valid JSON', async () => {
+      const mockGenerateContent = vi.fn().mockResolvedValue({
+        response: {
+          text: () => 'The sentiment score is 2',
+        },
       })
+      vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
+      const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      expect(result).toBeDefined()
+      expect(result).toBe(3)
+    })
 
-      test('should analyze negative sentiment from negative text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
-        expect(sentimentAnalysis).toBeLessThan(4)
+    test('handle API error and return a fallback value', async () => {
+      vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('API is down'))
+
+      const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+
+      expect(result).toBeDefined()
+      expect(validRatings).toContain(result)
+    })
+  })
+
+  describe('Picture Sentiment Analysis', { timeout: 300000 }, () => {
+    const happyImageBuffer = readFileSync(join(__dirname, 'mocks/portraits/happy.jpg'))
+    const sadImageBuffer = readFileSync(join(__dirname, 'mocks/portraits/sad.jpg'))
+    const neutralImageBuffer = readFileSync(join(__dirname, 'mocks/portraits/neutral.jpg'))
+
+    const happyImage: MemoryStoredFile = {
+      buffer: happyImageBuffer,
+      originalName: 'happy.jpg',
+      mimeType: 'image/jpeg',
+      size: happyImageBuffer.length,
+    } as MemoryStoredFile
+
+    const sadImage: MemoryStoredFile = {
+      buffer: sadImageBuffer,
+      originalName: 'sad.jpg',
+      mimeType: 'image/jpeg',
+      size: sadImageBuffer.length,
+    } as MemoryStoredFile
+
+    const neutralImage: MemoryStoredFile = {
+      buffer: neutralImageBuffer,
+      originalName: 'neutral.jpg',
+      mimeType: 'image/jpeg',
+      size: neutralImageBuffer.length,
+    } as MemoryStoredFile
+
+    test('should analyze positive sentiment from smiling face picture', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(happyImage)
+      expect(loggerSpy).not.toHaveBeenCalled()
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
+      expect(sentimentAnalysis).toBeLessThanOrEqual(5)
+      expect(validRatings).toContain(sentimentAnalysis)
+    })
+
+    test('should analyze negative sentiment from sad face picture', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(sadImage)
+      expect(loggerSpy).not.toHaveBeenCalled()
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(1)
+      expect(sentimentAnalysis).toBeLessThanOrEqual(3)
+      expect(validRatings).toContain(sentimentAnalysis)
+    })
+
+    test('should analyze neutral sentiment from neutral expression picture', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(neutralImage)
+      expect(loggerSpy).not.toHaveBeenCalled()
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
+      expect(sentimentAnalysis).toBeLessThanOrEqual(4)
+      expect(validRatings).toContain(sentimentAnalysis)
+    })
+
+    test('should return fallback score when vision API response is not valid JSON', async () => {
+      const mockPictureBuffer = Buffer.from('fake-image-data')
+      const mockPicture: MemoryStoredFile = {
+        buffer: mockPictureBuffer,
+        originalName: 'mock.jpg',
+        mimeType: 'image/jpeg',
+        size: mockPictureBuffer.length,
+      } as MemoryStoredFile
+
+      const mockGenerateContent = vi.fn().mockResolvedValue({
+        response: {
+          text: () => 'The picture shows happiness',
+        },
       })
+      vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
+      const result = await moodService.getPictureSentimentAnalysis(mockPicture)
+      expect(result).toBeDefined()
+      expect(result).toBe(3)
+    })
 
-      test('should analyze neutral sentiment from neutral text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
-        expect(sentimentAnalysis).toBeLessThanOrEqual(4)
-        expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
-      })
+    test('handle vision API error and return a fallback value', async () => {
+      const mockPictureBuffer = Buffer.from('fake-image-data')
+      const mockPicture: MemoryStoredFile = {
+        buffer: mockPictureBuffer,
+        originalName: 'mock.jpg',
+        mimeType: 'image/jpeg',
+        size: mockPictureBuffer.length,
+      } as MemoryStoredFile
 
-      test('handle ApPI error and return a fake value', async () => {
-        vi.spyOn(httpService.axiosRef, 'get').mockRejectedValueOnce(new Error('API is down'))
+      vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('Vision API is down'))
 
-        const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      const result = await moodService.getPictureSentimentAnalysis(mockPicture)
 
-        expect(result).toBeDefined()
-        expect(validRatings).toContain(result)
-      })
-    },
-    { timeout: 300000 },
-  )
+      expect(result).toBeDefined()
+      expect(validRatings).toContain(result)
+    })
+  })
 
   describe('MoodRating', () => {
     let rating: MoodRating
@@ -260,7 +366,13 @@ describe('Mood Analysis', () => {
       extremeWeather.current = {
         temp: 250,
         clouds: 100,
-        weather: [{ main: 'Thunderstorm', description: 'heavy thunderstorm', icon: '11d' }],
+        weather: [
+          {
+            main: 'Thunderstorm',
+            description: 'heavy thunderstorm',
+            icon: '11d',
+          },
+        ],
         wind_speed: 25,
       } as CurrentWeatherDto
 

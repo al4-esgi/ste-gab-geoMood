@@ -3,10 +3,10 @@ import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { validate } from 'class-validator'
 import { MemoryStoredFile } from 'nestjs-form-data'
-import { CreateMoodDto } from 'src/moods/dto/request/create-mood.dto'
 import { beforeEach, describe, expect, it, test } from 'vitest'
 import { validateEnv } from '../src/_utils/config/env.config'
-import { LocationDto } from '../src/moods/dto/request/location.dto'
+import { CreateMoodDto } from '../src/moods/_utils/dto/request/create-mood.dto'
+import { LocationDto } from '../src/moods/_utils/dto/request/location.dto'
 import { MockMoodService } from './mocks/mood-service.mock'
 
 /*
