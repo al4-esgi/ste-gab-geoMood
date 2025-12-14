@@ -1,6 +1,8 @@
-import { HttpModule, HttpService } from '@nestjs/axios'
+import { HttpModule } from '@nestjs/axios'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { validateEnv } from '../src/_utils/config/env.config'
 import { AnalysisRating, MoodRating } from '../src/_utils/types/mood-rating'
@@ -21,7 +23,6 @@ import { MoodsService } from '../src/moods/moods.service'
 
 describe('Mood Analysis', () => {
   let moodService: MoodsService
-  let httpService: HttpService
   const validRatings = [1, 2, 3, 4, 5]
 
   beforeEach(async () => {
@@ -37,55 +38,100 @@ describe('Mood Analysis', () => {
       ],
     }).compile()
     moodService = module.get(MoodsService)
-    httpService = module.get(HttpService)
   })
 
-  describe(
-    'Text Sentiment Analysis',
-    () => {
-      const positiveUserInput = "Je me sens bien aujourd'hui"
-      const negativeUserInput = "Je me sens mal aujourd'hui"
-      const neutralUserInput = 'rien de spécial'
+  describe('Text Sentiment Analysis', { timeout: 300000 }, () => {
+    const positiveUserInput = "Je me sens bien aujourd'hui"
+    const negativeUserInput = "Je me sens mal aujourd'hui"
+    const neutralUserInput = 'rien de spécial'
 
-      test('should analyze positive sentiment from positive text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
-        expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
+    test('should analyze positive sentiment from positive text', async () => {
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
+    })
+
+    test('should analyze negative sentiment from negative text', async () => {
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
+      expect(sentimentAnalysis).toBeLessThan(4)
+    })
+
+    test('should analyze neutral sentiment from neutral text', async () => {
+      const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      expect(sentimentAnalysis).toBeLessThanOrEqual(4)
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
+    })
+
+    test('should return fallback score when LLM response is not valid JSON', async () => {
+      const mockGenerateContent = vi.fn().mockResolvedValue({
+        response: {
+          text: () => 'The sentiment score is 2',
+        },
       })
+      vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
+      const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      expect(result).toBeDefined()
+      expect(result).toBe(3)
+    })
 
-      test('should analyze negative sentiment from negative text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
-        expect(sentimentAnalysis).toBeLessThan(4)
+    test('handle API error and return a fallback value', async () => {
+      vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('API is down'))
+
+      const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+
+      expect(result).toBeDefined()
+      expect(validRatings).toContain(result)
+    })
+  })
+
+  describe('Picture Sentiment Analysis', { timeout: 300000 }, () => {
+    const happyImageBuffer = readFileSync(join(__dirname, 'mocks/portraits/happy.jpg'))
+    const sadImageBuffer = readFileSync(join(__dirname, 'mocks/portraits/sad.jpg'))
+    const neutralImageBuffer = readFileSync(join(__dirname, 'mocks/portraits/neutral.jpg'))
+
+    test('should analyze positive sentiment from smiling face picture', async () => {
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(happyImageBuffer)
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
+      expect(sentimentAnalysis).toBeLessThanOrEqual(5)
+      expect(validRatings).toContain(sentimentAnalysis)
+    })
+
+    test('should analyze negative sentiment from sad face picture', async () => {
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(sadImageBuffer)
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(1)
+      expect(sentimentAnalysis).toBeLessThanOrEqual(3)
+      expect(validRatings).toContain(sentimentAnalysis)
+    })
+
+    test('should analyze neutral sentiment from neutral expression picture', async () => {
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(neutralImageBuffer)
+      expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
+      expect(sentimentAnalysis).toBeLessThanOrEqual(4)
+      expect(validRatings).toContain(sentimentAnalysis)
+    })
+
+    test('should return fallback score when vision API response is not valid JSON', async () => {
+      const mockPictureBuffer = Buffer.from('fake-image-data')
+      const mockGenerateContent = vi.fn().mockResolvedValue({
+        response: {
+          text: () => 'The picture shows happiness',
+        },
       })
+      vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
+      const result = await moodService.getPictureSentimentAnalysis(mockPictureBuffer)
+      expect(result).toBeDefined()
+      expect(result).toBe(3)
+    })
 
-      test('should analyze neutral sentiment from neutral text', async () => {
-        const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
-        expect(sentimentAnalysis).toBeLessThanOrEqual(4)
-        expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
-      })
+    test('handle vision API error and return a fallback value', async () => {
+      const mockPictureBuffer = Buffer.from('fake-image-data')
+      vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('Vision API is down'))
 
-      test('should return fallback score when LLM response is not valid JSON', async () => {
-        const mockGenerateContent = vi.fn().mockResolvedValue({
-          response: {
-            text: () => 'The sentiment score is 2',
-          },
-        })
-        vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
-        const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
-        expect(result).toBeDefined()
-        expect(result).toBe(3)
-      })
+      const result = await moodService.getPictureSentimentAnalysis(mockPictureBuffer)
 
-      test('handle ApPI error and return a fake value', async () => {
-        vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('API is down'))
-
-        const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
-
-        expect(result).toBeDefined()
-        expect(validRatings).toContain(result)
-      })
-    },
-    { timeout: 300000 },
-  )
+      expect(result).toBeDefined()
+      expect(validRatings).toContain(result)
+    })
+  })
 
   describe('MoodRating', () => {
     let rating: MoodRating

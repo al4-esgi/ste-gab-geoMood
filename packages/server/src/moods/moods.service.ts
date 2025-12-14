@@ -4,7 +4,13 @@ import { Inject, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { IMoodService } from '../_utils/interfaces/mood-service.interface'
 import { AnalysisRating, MoodRating } from '../_utils/types/mood-rating'
-import { GEMINI_PRO_MODEL_TOKEN, GEMINI_PROMPT, POSITIVE_KEYWORDS, NEGATIVE_KEYWORDS } from './_utils/constants'
+import {
+  GEMINI_PRO_MODEL_TOKEN,
+  GEMINI_PROMPT,
+  GEMINI_VISION_PROMPT,
+  NEGATIVE_KEYWORDS,
+  POSITIVE_KEYWORDS,
+} from './_utils/constants'
 import { WeatherApiResponseDto } from './_utils/dto/response/weather-api-response.dto'
 import { decodeLlmResponse } from './_utils/schemas/llm-response.schema'
 
@@ -38,7 +44,29 @@ export class MoodsService implements IMoodService {
       const llmResponse = decodeLlmResponse(response)
       return llmResponse.score
     } catch (e) {
+      console.error(e)
       return this.handleLlmFailure(userInput)
+    }
+  }
+
+  async getPictureSentimentAnalysis(pictureBuffer: Buffer): Promise<number> {
+    try {
+      const result = await this.geminiModel.generateContent([
+        GEMINI_VISION_PROMPT,
+        {
+          inlineData: {
+            mimeType: 'image/jpeg',
+            data: pictureBuffer.toString('base64'),
+          },
+        },
+      ])
+
+      const response = result.response.text()
+      const llmResponse = decodeLlmResponse(response)
+      return llmResponse.score
+    } catch (e) {
+      console.error(e)
+      return 3
     }
   }
 

@@ -15,7 +15,8 @@ export interface IMoodService {
   handleApiFailure(): Promise<WeatherApiResponseDto>
   getWeather(lat: number, lon: number): Promise<WeatherApiResponseDto>
   fetchWheatherData(lat: number, lng: number): Promise<any>
-  getTextSentimentAnalysis(userInput: string): Promise<any>
+  getTextSentimentAnalysis(userInput: string): Promise<number>
+  getPictureSentimentAnalysis(pictureBuffer?: Buffer): Promise<number>
   getAnalysisRatingFromWeather(weatherResponse: WeatherApiResponseDto): AnalysisRating
   createMoodScore(
     userSentimentAnalysis: AnalysisRating,

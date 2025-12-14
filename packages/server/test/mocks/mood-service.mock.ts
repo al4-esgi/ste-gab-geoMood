@@ -3,8 +3,8 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { EnvironmentVariables, WeatherConfig } from 'src/_utils/config/env.config'
 import { IMoodService } from 'src/_utils/interfaces/mood-service.interface'
-import { WeatherApiResponseDto } from 'src/moods/dto/response/weather-api-response.dto'
 import { AnalysisRating, MoodRating } from '../../src/_utils/types/mood-rating'
+import { WeatherApiResponseDto } from '../../src/moods/_utils/dto/response/weather-api-response.dto'
 
 @Injectable()
 export class MockMoodService implements IMoodService {
@@ -55,6 +55,10 @@ export class MockMoodService implements IMoodService {
     if (positiveCount > negativeCount) return 5
     if (negativeCount > positiveCount) return 1
     return 3
+  }
+
+  getPictureSentimentAnalysis(pictureBuffer?: Buffer): Promise<number> {
+    return new Promise(() => 3)
   }
 
   getAnalysisRatingFromWeather(weatherResponse: WeatherApiResponseDto): AnalysisRating {

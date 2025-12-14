@@ -23,6 +23,31 @@ Examples of INCORRECT responses (DO NOT DO THIS):
 \`\`\`
 Text to analyze: ` as const
 
+export const GEMINI_VISION_PROMPT = `You are a facial emotion analysis API that returns raw JSON only.
+Analyze the facial expression and emotion in this image and respond with a JSON object.
+CRITICAL FORMATTING RULES:
+- Return ONLY the raw JSON object
+- DO NOT wrap in markdown code blocks
+- DO NOT use backticks (\`\`\`)
+- DO NOT add any explanation or text
+- DO NOT use "json" language tags
+Required format (copy exactly): {"score":4}
+Scoring guidelines for facial expressions:
+- 1: Very negative emotion (crying, despair, anger, extreme sadness)
+- 2: Negative emotion (sad face, frown, disappointed expression, frustration)
+- 3: Neutral emotion (calm face, no strong emotion, relaxed, contemplative)
+- 4: Positive emotion (smile, content expression, pleasant look, satisfied)
+- 5: Very positive emotion (big smile, laughing, joy, excitement, elation)
+Examples of CORRECT responses:
+{"score":1}
+{"score":3}
+{"score":5}
+Examples of INCORRECT responses (DO NOT DO THIS):
+\`\`\`json
+{"score":4}
+\`\`\`
+Focus on the primary facial expression visible in the image.` as const
+
 export const GEMINI_CLIENT_TOKEN = 'GEMINI_CLIENT_TOKEN'
 export const GEMINI_PRO_MODEL_TOKEN = 'GEMINI_PRO_MODEL_TOKEN'
 
@@ -53,7 +78,7 @@ export const POSITIVE_KEYWORDS = [
   'love',
   'glad',
   'pleased',
-] as const
+]
 
 export const NEGATIVE_KEYWORDS = [
   'mal',
@@ -81,4 +106,4 @@ export const NEGATIVE_KEYWORDS = [
   'frustrated',
   'upset',
   'hate',
-] as const
+]
