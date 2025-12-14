@@ -51,7 +51,7 @@ Focus on the primary facial expression visible in the image.` as const
 export const GEMINI_CLIENT_TOKEN = 'GEMINI_CLIENT_TOKEN'
 export const GEMINI_PRO_MODEL_TOKEN = 'GEMINI_PRO_MODEL_TOKEN'
 
-export const POSITIVE_KEYWORDS = [
+export const POSITIVE_KEYWORDS = new Set([
   'bien',
   'heureux',
   'heureuse',
@@ -78,9 +78,9 @@ export const POSITIVE_KEYWORDS = [
   'love',
   'glad',
   'pleased',
-]
+])
 
-export const NEGATIVE_KEYWORDS = [
+export const NEGATIVE_KEYWORDS = new Set([
   'mal',
   'triste',
   'malheureux',
@@ -106,4 +106,4 @@ export const NEGATIVE_KEYWORDS = [
   'frustrated',
   'upset',
   'hate',
-]
+])

@@ -1,6 +1,7 @@
 import { HttpModule } from '@nestjs/axios'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
+import { MemoryStoredFile } from 'nestjs-form-data'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
@@ -46,17 +47,23 @@ describe('Mood Analysis', () => {
     const neutralUserInput = 'rien de spécial'
 
     test('should analyze positive sentiment from positive text', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
       const sentimentAnalysis = await moodService.getTextSentimentAnalysis(positiveUserInput)
+      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
     })
 
     test('should analyze negative sentiment from negative text', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
       const sentimentAnalysis = await moodService.getTextSentimentAnalysis(negativeUserInput)
+      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeLessThan(4)
     })
 
     test('should analyze neutral sentiment from neutral text', async () => {
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
       const sentimentAnalysis = await moodService.getTextSentimentAnalysis(neutralUserInput)
+      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeLessThanOrEqual(4)
       expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
     })
@@ -88,22 +95,49 @@ describe('Mood Analysis', () => {
     const sadImageBuffer = readFileSync(join(__dirname, 'mocks/portraits/sad.jpg'))
     const neutralImageBuffer = readFileSync(join(__dirname, 'mocks/portraits/neutral.jpg'))
 
+    const happyImage: MemoryStoredFile = {
+      buffer: happyImageBuffer,
+      originalName: 'happy.jpg',
+      mimeType: 'image/jpeg',
+      size: happyImageBuffer.length,
+    } as MemoryStoredFile
+
+    const sadImage: MemoryStoredFile = {
+      buffer: sadImageBuffer,
+      originalName: 'sad.jpg',
+      mimeType: 'image/jpeg',
+      size: sadImageBuffer.length,
+    } as MemoryStoredFile
+
+    const neutralImage: MemoryStoredFile = {
+      buffer: neutralImageBuffer,
+      originalName: 'neutral.jpg',
+      mimeType: 'image/jpeg',
+      size: neutralImageBuffer.length,
+    } as MemoryStoredFile
+
     test('should analyze positive sentiment from smiling face picture', async () => {
-      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(happyImageBuffer)
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(happyImage)
+      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
       expect(sentimentAnalysis).toBeLessThanOrEqual(5)
       expect(validRatings).toContain(sentimentAnalysis)
     })
 
     test('should analyze negative sentiment from sad face picture', async () => {
-      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(sadImageBuffer)
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(sadImage)
+      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeGreaterThanOrEqual(1)
       expect(sentimentAnalysis).toBeLessThanOrEqual(3)
       expect(validRatings).toContain(sentimentAnalysis)
     })
 
     test('should analyze neutral sentiment from neutral expression picture', async () => {
-      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(neutralImageBuffer)
+      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
+      const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(neutralImage)
+      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
       expect(sentimentAnalysis).toBeLessThanOrEqual(4)
       expect(validRatings).toContain(sentimentAnalysis)
@@ -111,22 +145,36 @@ describe('Mood Analysis', () => {
 
     test('should return fallback score when vision API response is not valid JSON', async () => {
       const mockPictureBuffer = Buffer.from('fake-image-data')
+      const mockPicture: MemoryStoredFile = {
+        buffer: mockPictureBuffer,
+        originalName: 'mock.jpg',
+        mimeType: 'image/jpeg',
+        size: mockPictureBuffer.length,
+      } as MemoryStoredFile
+
       const mockGenerateContent = vi.fn().mockResolvedValue({
         response: {
           text: () => 'The picture shows happiness',
         },
       })
       vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
-      const result = await moodService.getPictureSentimentAnalysis(mockPictureBuffer)
+      const result = await moodService.getPictureSentimentAnalysis(mockPicture)
       expect(result).toBeDefined()
       expect(result).toBe(3)
     })
 
     test('handle vision API error and return a fallback value', async () => {
       const mockPictureBuffer = Buffer.from('fake-image-data')
+      const mockPicture: MemoryStoredFile = {
+        buffer: mockPictureBuffer,
+        originalName: 'mock.jpg',
+        mimeType: 'image/jpeg',
+        size: mockPictureBuffer.length,
+      } as MemoryStoredFile
+
       vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('Vision API is down'))
 
-      const result = await moodService.getPictureSentimentAnalysis(mockPictureBuffer)
+      const result = await moodService.getPictureSentimentAnalysis(mockPicture)
 
       expect(result).toBeDefined()
       expect(validRatings).toContain(result)

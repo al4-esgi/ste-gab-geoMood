@@ -1,7 +1,7 @@
 import { MemoryStoredFile } from 'nestjs-form-data'
-import { AnalysisRating, MoodRating } from '../types/mood-rating'
 import { LocationDto } from 'src/moods/_utils/dto/request/location.dto'
 import { WeatherApiResponseDto } from 'src/moods/_utils/dto/response/weather-api-response.dto'
+import { AnalysisRating, MoodRating } from '../types/mood-rating'
 
 export interface ICreateMoodInputDto {
   textContent: string
@@ -16,7 +16,7 @@ export interface IMoodService {
   getWeather(lat: number, lon: number): Promise<WeatherApiResponseDto>
   fetchWheatherData(lat: number, lng: number): Promise<any>
   getTextSentimentAnalysis(userInput: string): Promise<number>
-  getPictureSentimentAnalysis(pictureBuffer?: Buffer): Promise<number>
+  getPictureSentimentAnalysis(pictureBuffer: MemoryStoredFile): Promise<number>
   getAnalysisRatingFromWeather(weatherResponse: WeatherApiResponseDto): AnalysisRating
   createMoodScore(
     userSentimentAnalysis: AnalysisRating,

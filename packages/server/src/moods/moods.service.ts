@@ -1,7 +1,8 @@
 import { GenerativeModel } from '@google/generative-ai'
 import { HttpService } from '@nestjs/axios'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { MemoryStoredFile } from 'nestjs-form-data'
 import { IMoodService } from '../_utils/interfaces/mood-service.interface'
 import { AnalysisRating, MoodRating } from '../_utils/types/mood-rating'
 import {
@@ -16,6 +17,8 @@ import { decodeLlmResponse } from './_utils/schemas/llm-response.schema'
 
 @Injectable()
 export class MoodsService implements IMoodService {
+  private readonly logger = new Logger(MoodsService.name)
+
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
@@ -44,28 +47,35 @@ export class MoodsService implements IMoodService {
       const llmResponse = decodeLlmResponse(response)
       return llmResponse.score
     } catch (e) {
-      console.error(e)
+      this.logger.error('Text sentiment analysis failed, using keyword fallback', e)
       return this.handleLlmFailure(userInput)
     }
   }
 
-  async getPictureSentimentAnalysis(pictureBuffer: Buffer): Promise<number> {
+  async getPictureSentimentAnalysis(picture: MemoryStoredFile): Promise<number> {
     try {
       const result = await this.geminiModel.generateContent([
         GEMINI_VISION_PROMPT,
         {
           inlineData: {
-            mimeType: 'image/jpeg',
-            data: pictureBuffer.toString('base64'),
+            mimeType: picture.mimeType,
+            data: picture.buffer.toString('base64'),
           },
         },
       ])
 
       const response = result.response.text()
       const llmResponse = decodeLlmResponse(response)
+
+      // Validate score bounds (defensive check)
+      if (llmResponse.score < 1 || llmResponse.score > 5) {
+        this.logger.error(`Vision API returned out-of-bounds score: ${llmResponse.score}`)
+        return 3
+      }
+
       return llmResponse.score
     } catch (e) {
-      console.error(e)
+      this.logger.error('Vision API sentiment analysis failed, returning neutral score', e)
       return 3
     }
   }
@@ -77,8 +87,8 @@ export class MoodsService implements IMoodService {
     let positiveCount = 0
     let negativeCount = 0
     for (const word of words) {
-      if (POSITIVE_KEYWORDS.includes(word)) positiveCount++
-      if (NEGATIVE_KEYWORDS.includes(word)) negativeCount++
+      if (POSITIVE_KEYWORDS.has(word)) positiveCount++
+      if (NEGATIVE_KEYWORDS.has(word)) negativeCount++
     }
 
     const totalKeywords = positiveCount + negativeCount
@@ -140,8 +150,7 @@ export class MoodsService implements IMoodService {
     if (ratingWeather < 0 || ratingWeather > 5) {
       throw new Error('Weather rating must be between 0 and 5')
     }
-
-    if (ratingPhotoAnalysis < 0 || ratingPhotoAnalysis > 5) {
+    if (ratingPhotoAnalysis !== undefined && (ratingPhotoAnalysis < 0 || ratingPhotoAnalysis > 5)) {
       throw new Error('Photo rating must be between 0 and 5')
     }
     return new MoodRating(userSentimentAnalysis, ratingUserNumberInput, ratingWeather, ratingPhotoAnalysis)
