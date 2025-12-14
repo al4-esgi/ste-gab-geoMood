@@ -4,15 +4,17 @@ import { Inject, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { IMoodService } from '../_utils/interfaces/mood-service.interface'
 import { AnalysisRating, MoodRating } from '../_utils/types/mood-rating'
-import { GEMINI_PRO_MODEL_TOKEN, GEMINI_PROMPT } from './_utils/constants'
+import { GEMINI_PRO_MODEL_TOKEN, GEMINI_PROMPT, POSITIVE_KEYWORDS, NEGATIVE_KEYWORDS } from './_utils/constants'
 import { WeatherApiResponseDto } from './_utils/dto/response/weather-api-response.dto'
+import { decodeLlmResponse } from './_utils/schemas/llm-response.schema'
 
 @Injectable()
 export class MoodsService implements IMoodService {
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-    @Inject(GEMINI_PRO_MODEL_TOKEN) private readonly geminiModel: GenerativeModel,
+    @Inject(GEMINI_PRO_MODEL_TOKEN)
+    private readonly geminiModel: GenerativeModel,
   ) {}
 
   fetchWeatherData(lat: number, lng: number): Promise<WeatherApiResponseDto> {
@@ -29,11 +31,37 @@ export class MoodsService implements IMoodService {
   }
 
   async getTextSentimentAnalysis(userInput: string): Promise<number> {
-    const prompt = GEMINI_PROMPT + userInput
-    const result = await this.geminiModel.generateContent(prompt)
-    const response = result.response
-    const score = response.candidates[0].content.parts[0].text.split(':')[1]
-    return parseInt(score, 10)
+    try {
+      const prompt = GEMINI_PROMPT + userInput
+      const result = await this.geminiModel.generateContent(prompt)
+      const response = result.response.text()
+      const llmResponse = decodeLlmResponse(response)
+      return llmResponse.score
+    } catch (e) {
+      return this.handleLlmFailure(userInput)
+    }
+  }
+
+  private handleLlmFailure(userInput: string): number {
+    const normalizedText = userInput.toLowerCase().replace(/[.,!?;:'"""()]/g, ' ')
+    const words = normalizedText.split(' ')
+
+    let positiveCount = 0
+    let negativeCount = 0
+    for (const word of words) {
+      if (POSITIVE_KEYWORDS.includes(word)) positiveCount++
+      if (NEGATIVE_KEYWORDS.includes(word)) negativeCount++
+    }
+
+    const totalKeywords = positiveCount + negativeCount
+
+    if (totalKeywords === 0) {
+      return 3
+    }
+    const positiveRatio = positiveCount / totalKeywords
+    const score = Math.round(1 + positiveRatio * 4)
+
+    return Math.max(1, Math.min(5, score))
   }
 
   getAnalysisRatingFromWeather(weatherResponse: WeatherApiResponseDto): AnalysisRating {

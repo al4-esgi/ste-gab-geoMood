@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { validateEnv } from '../src/_utils/config/env.config'
 import { AnalysisRating, MoodRating } from '../src/_utils/types/mood-rating'
-import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/moods/dto/response/weather-api-response.dto'
+import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/moods/_utils/dto/response/weather-api-response.dto'
 import { MoodsModule } from '../src/moods/moods.module'
 import { MoodsService } from '../src/moods/moods.service'
 
@@ -12,9 +12,9 @@ import { MoodsService } from '../src/moods/moods.service'
 ### 2. Mood Analysis
 
 - Calculate MoodScore combining:
-    - user text and rating,
-    - real weather data,
-    - and, if possible, AI analysis (Vision API or Natural Language API).
+	- user text and rating,
+	- real weather data,
+	- and, if possible, AI analysis (Vision API or Natural Language API).
 
 💡 If AI integration is not possible, a dictionary or simple rule can replace the analysis.
 */
@@ -63,8 +63,20 @@ describe('Mood Analysis', () => {
         expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
       })
 
+      test('should return fallback score when LLM response is not valid JSON', async () => {
+        const mockGenerateContent = vi.fn().mockResolvedValue({
+          response: {
+            text: () => 'The sentiment score is 2',
+          },
+        })
+        vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
+        const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
+        expect(result).toBeDefined()
+        expect(result).toBe(3)
+      })
+
       test('handle ApPI error and return a fake value', async () => {
-        vi.spyOn(httpService.axiosRef, 'get').mockRejectedValueOnce(new Error('API is down'))
+        vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('API is down'))
 
         const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
 
@@ -260,7 +272,13 @@ describe('Mood Analysis', () => {
       extremeWeather.current = {
         temp: 250,
         clouds: 100,
-        weather: [{ main: 'Thunderstorm', description: 'heavy thunderstorm', icon: '11d' }],
+        weather: [
+          {
+            main: 'Thunderstorm',
+            description: 'heavy thunderstorm',
+            icon: '11d',
+          },
+        ],
         wind_speed: 25,
       } as CurrentWeatherDto
 

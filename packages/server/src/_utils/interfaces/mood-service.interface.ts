@@ -1,7 +1,7 @@
 import { MemoryStoredFile } from 'nestjs-form-data'
-import { LocationDto } from 'src/moods/dto/request/location.dto'
-import { WeatherApiResponseDto } from 'src/moods/dto/response/weather-api-response.dto'
 import { AnalysisRating, MoodRating } from '../types/mood-rating'
+import { LocationDto } from 'src/moods/_utils/dto/request/location.dto'
+import { WeatherApiResponseDto } from 'src/moods/_utils/dto/response/weather-api-response.dto'
 
 export interface ICreateMoodInputDto {
   textContent: string

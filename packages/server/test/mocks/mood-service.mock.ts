@@ -56,7 +56,6 @@ export class MockMoodService implements IMoodService {
     if (negativeCount > positiveCount) return 1
     return 3
   }
-  
 
   getAnalysisRatingFromWeather(weatherResponse: WeatherApiResponseDto): AnalysisRating {
     if (!weatherResponse.current) return 3
