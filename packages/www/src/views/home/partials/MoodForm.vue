@@ -191,7 +191,7 @@ defineExpose({ openForm });
         "form": {
             "title": "Ajouter un mood",
             "email": "Email",
-            "emailPlaceholder": "votre@email.com",
+            "emailPlaceholder": "votre{'@'}email.com",
             "rating": "Note",
             "textContent": "Comment vous sentez-vous ?",
             "textContentPlaceholder": "Partagez votre humeur...",
