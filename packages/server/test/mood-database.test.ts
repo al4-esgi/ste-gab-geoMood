@@ -1,6 +1,8 @@
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { validateEnv } from "../src/_utils/config/env.config";
 import { UserDocument } from "../src/users/schemas/user.schema";
@@ -120,6 +122,10 @@ describe("Mood Database Storage", () => {
     });
 
     it("should save mood with picture", async () => {
+      const imagePath = join(__dirname, "mocks", "portraits", "happy.jpg");
+      const imageBuffer = readFileSync(imagePath);
+      const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+
       const mood = {
         textContent: "Beautiful sunset",
         rating: 5,
@@ -131,13 +137,7 @@ describe("Mood Database Storage", () => {
           pressure: 1015,
           windSpeed: 3,
         },
-        picture: {
-          key: "moods/sunset.jpg",
-          fileName: "sunset.jpg",
-          mimeType: "image/jpeg",
-          size: 2048576,
-          createdAt: new Date(),
-        },
+        picture: base64Image,
       };
 
       const updatedUser = await usersRepository.addMoodToUser(
@@ -147,7 +147,8 @@ describe("Mood Database Storage", () => {
 
       expect(updatedUser).toBeDefined();
       expect(updatedUser!.moods[0].picture).toBeDefined();
-      expect(updatedUser!.moods[0].picture!.fileName).toBe("sunset.jpg");
+      expect(updatedUser!.moods[0].picture).toBe(base64Image);
+      expect(updatedUser!.moods[0].picture).toMatch(/^data:image\/jpeg;base64,/);
     });
   });
 
