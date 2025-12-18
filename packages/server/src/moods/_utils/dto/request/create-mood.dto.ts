@@ -4,7 +4,7 @@ import { Optional } from 'class-validator-extended'
 import { HasMimeType, IsFile, MaxFileSize, MemoryStoredFile } from 'nestjs-form-data'
 import { ICreateMoodInputDto } from 'src/_utils/interfaces/mood-service.interface'
 import { LocationDto } from './location.dto'
-import { Type } from 'class-transformer'
+import { Type, Transform, plainToInstance } from 'class-transformer'
 
 export class CreateMoodDto implements ICreateMoodInputDto {
   @ApiProperty({
@@ -23,6 +23,7 @@ export class CreateMoodDto implements ICreateMoodInputDto {
     maximum: 5,
     example: 4
   })
+  @Transform(({ value }) => parseInt(value, 10))
   @Max(5)
   @Min(1)
   @IsInt()
@@ -43,6 +44,13 @@ export class CreateMoodDto implements ICreateMoodInputDto {
   @ApiProperty({
     description: 'Location information',
     type: LocationDto
+  })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const parsed = JSON.parse(value);
+      return plainToInstance(LocationDto, parsed);
+    }
+    return value;
   })
   @Type(() => LocationDto)
   @ValidateNested()
