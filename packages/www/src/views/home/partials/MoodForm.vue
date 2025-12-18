@@ -26,14 +26,11 @@ const mediaStream = ref<MediaStream | null>(null);
 const isCameraActive = ref(false);
 const isLoadingCamera = ref(false);
 
-const openForm = async () => {
+const openForm = () => {
     showDialog.value = true;
-    await nextTick();
-    startCamera();
 };
 
 const closeForm = () => {
-    stopCamera();
     showDialog.value = false;
     resetForm();
 };
@@ -67,23 +64,20 @@ const startCamera = async () => {
             videoElement.value.muted = true;
             videoElement.value.playsInline = true;
 
-            try {
-                await videoElement.value.play();
-                isCameraActive.value = true;
-                isLoadingCamera.value = false;
-            } catch (playError) {
-                console.error('Error playing video:', playError);
-                toast.error(t('form.cameraError'));
-            }
+            await videoElement.value.play();
+            isCameraActive.value = true;
+            isLoadingCamera.value = false;
         } else {
-            console.error('Video element not found');
             toast.error(t('form.cameraError'));
             isLoadingCamera.value = false;
+            stopCamera();
+            showDialog.value = false;
         }
     } catch (error) {
-        console.error('Camera access error:', error);
         toast.error(t('form.cameraError'));
         isLoadingCamera.value = false;
+        isCameraActive.value = false;
+        showDialog.value = false;
     }
 };
 
@@ -164,8 +158,11 @@ const handleSubmit = async () => {
 };
 
 watch(showDialog, (newVal) => {
-    if (!newVal) {
+    if (newVal && !capturedPhoto.value) {
+        startCamera();
+    } else if (!newVal) {
         stopCamera();
+        capturedPhoto.value = null;
     }
 });
 
