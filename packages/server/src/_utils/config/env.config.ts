@@ -27,8 +27,8 @@ export class GeminiConfig {
 }
 
 export class ServerConfig {
-  @IsNumber()
-  PORT: number;
+  @IsString()
+  PORT: string
 
   @IsString()
   NODE_ENV: string;
@@ -37,7 +37,7 @@ export class ServerConfig {
 export class EnvironmentVariables {
   @ValidateNested()
   @Type(() => DatabaseConfig)
-  DATABASE: DatabaseConfig;
+  DATABASE: DatabaseConfig
 
   @ValidateNested()
   @Type(() => ServerConfig)

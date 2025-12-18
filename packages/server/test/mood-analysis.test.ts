@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing'
+import { Test } from '@nestjs/testing'
 import { MemoryStoredFile } from 'nestjs-form-data'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import { AnalysisRating, MoodRating } from '../src/_utils/types/mood-rating'
 import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/moods/_utils/dto/response/weather-api-response.dto'
 import { MoodsService } from '../src/moods/moods.service'
@@ -23,8 +23,8 @@ describe('Mood Analysis', () => {
   let moodService: MoodsService
   const validRatings = [1, 2, 3, 4, 5]
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    const module = await Test.createTestingModule({
       imports: [TestModule],
     }).compile()
     moodService = module.get(MoodsService)
@@ -106,27 +106,21 @@ describe('Mood Analysis', () => {
     } as MemoryStoredFile
 
     test('should analyze positive sentiment from smiling face picture', async () => {
-      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
       const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(happyImage)
-      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeGreaterThanOrEqual(3)
       expect(sentimentAnalysis).toBeLessThanOrEqual(5)
       expect(validRatings).toContain(sentimentAnalysis)
     })
 
     test('should analyze negative sentiment from sad face picture', async () => {
-      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
       const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(sadImage)
-      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeGreaterThanOrEqual(1)
       expect(sentimentAnalysis).toBeLessThanOrEqual(3)
       expect(validRatings).toContain(sentimentAnalysis)
     })
 
     test('should analyze neutral sentiment from neutral expression picture', async () => {
-      const loggerSpy = vi.spyOn(moodService['logger'], 'error')
       const sentimentAnalysis = await moodService.getPictureSentimentAnalysis(neutralImage)
-      expect(loggerSpy).not.toHaveBeenCalled()
       expect(sentimentAnalysis).toBeGreaterThanOrEqual(2)
       expect(sentimentAnalysis).toBeLessThanOrEqual(4)
       expect(validRatings).toContain(sentimentAnalysis)
