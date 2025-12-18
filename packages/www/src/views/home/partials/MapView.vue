@@ -7,11 +7,12 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import { useUserPhoto } from '@/composables/useUserPhoto';
+import { useGeolocation } from '@/composables/useGeolocation';
 
 const { t } = useI18n();
 const { userPhoto } = useUserPhoto();
+const { getCurrentPosition, isLoadingPosition, geolocationError } = useGeolocation();
 const mapContainer = ref<HTMLElement | null>(null);
-const isLoadingLocation = ref(true);
 const mapInstance = ref<L.Map | null>(null);
 const currentMarker = ref<L.Marker | null>(null);
 const hasUserLocation = ref(false);
@@ -54,7 +55,6 @@ const initMap = (lat: number, lng: number, isUserLocation = false) => {
     );
 
     hasUserLocation.value = isUserLocation;
-    isLoadingLocation.value = false;
 };
 
 const createMarkerIcon = (photo?: string | null) => {
@@ -92,40 +92,32 @@ const updateMapLocation = (
     );
 
     hasUserLocation.value = isUserLocation;
-    isLoadingLocation.value = false;
 };
 
-const requestGeolocation = () => {
-    if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                if (mapInstance.value && !hasUserLocation.value) {
-                    updateMapLocation(latitude, longitude, true);
-                } else {
-                    initMap(latitude, longitude, true);
-                }
-            },
-            (error) => {
-                if (error.code === error.PERMISSION_DENIED) {
-                    toast.error(t('map.geolocationDenied'));
-                } else {
-                    toast.error(t('map.geolocationError'));
-                }
-                isLoadingLocation.value = false;
-                if (!mapInstance.value) {
-                    initMap(48.8566, 2.3522, false);
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-            },
-        );
-    } else {
-        toast.error(t('map.geolocationNotSupported'));
-        isLoadingLocation.value = false;
+const requestGeolocation = async () => {
+    try {
+        const position = await getCurrentPosition();
+
+        if (mapInstance.value) {
+            updateMapLocation(position.lat, position.lng, true);
+        } else {
+            initMap(position.lat, position.lng, true);
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === 'Geolocation not supported') {
+                toast.error(t('map.geolocationNotSupported'));
+            } else {
+                toast.error(t('map.geolocationError'));
+            }
+        } else if (geolocationError.value) {
+            if (geolocationError.value.code === geolocationError.value.PERMISSION_DENIED) {
+                toast.error(t('map.geolocationDenied'));
+            } else {
+                toast.error(t('map.geolocationError'));
+            }
+        }
+
         if (!mapInstance.value) {
             initMap(48.8566, 2.3522, false);
         }
@@ -140,7 +132,6 @@ const initPermissionWatcher = async () => {
             });
             permission.addEventListener('change', () => {
                 if (permission.state === 'granted' && !hasUserLocation.value) {
-                    isLoadingLocation.value = true;
                     requestGeolocation();
                 } else if (
                     permission.state === 'denied' &&
@@ -174,7 +165,7 @@ watch(userPhoto, (newPhoto) => {
 
 <template>
     <div class="map-view">
-        <Card v-if="isLoadingLocation" class="map-view__loading">
+        <Card v-if="isLoadingPosition" class="map-view__loading">
             <template #content>
                 <div class="map-view__loading-content">
                     <LoadingSpinner />
