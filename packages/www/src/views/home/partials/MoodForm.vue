@@ -7,6 +7,7 @@ import Button from 'primevue/button';
 import Textarea from 'primevue/textarea';
 import Rating from 'primevue/rating';
 import InputText from 'primevue/inputtext';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import { useMood } from '@/composables/useMood';
 import { useGeolocation } from '@/composables/useGeolocation';
 import type { CreateMoodPayload } from '@/types/Mood.type';
@@ -24,7 +25,7 @@ const videoElement = ref<HTMLVideoElement | null>(null);
 const canvasElement = ref<HTMLCanvasElement | null>(null);
 const mediaStream = ref<MediaStream | null>(null);
 const isCameraActive = ref(false);
-const isLoadingCamera = ref(false);
+const isLoading = ref(false);
 
 const openForm = () => {
     showDialog.value = true;
@@ -44,7 +45,7 @@ const resetForm = () => {
 
 const startCamera = async () => {
     try {
-        isLoadingCamera.value = true;
+        isLoading.value = true;
         await nextTick();
 
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -66,16 +67,16 @@ const startCamera = async () => {
 
             await videoElement.value.play();
             isCameraActive.value = true;
-            isLoadingCamera.value = false;
+            isLoading.value = false;
         } else {
             toast.error(t('form.cameraError'));
-            isLoadingCamera.value = false;
+            isLoading.value = false;
             stopCamera();
             showDialog.value = false;
         }
     } catch (error) {
         toast.error(t('form.cameraError'));
-        isLoadingCamera.value = false;
+        isLoading.value = false;
         isCameraActive.value = false;
         showDialog.value = false;
     }
@@ -86,10 +87,13 @@ const stopCamera = () => {
         mediaStream.value.getTracks().forEach((track) => track.stop());
         mediaStream.value = null;
     }
+
     if (videoElement.value) {
         videoElement.value.srcObject = null;
     }
+
     isCameraActive.value = false;
+    isLoading.value = false;
 };
 
 const capturePhoto = () => {
@@ -190,14 +194,16 @@ defineExpose({ openForm });
             :style="{ width: '90vw', maxWidth: '600px' }"
         >
             <form @submit.prevent="handleSubmit" class="mood-form__content">
-                <!-- Camera Section -->
                 <div class="mood-form__camera-section">
-                    <div v-if="isLoadingCamera" class="mood-form__camera-loading">
-                        <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+                    <div v-if="isLoading" class="mood-form__camera-loading">
+                        <LoadingSpinner />
                         <p>{{ t('form.cameraLoading') }}</p>
                     </div>
 
-                    <div v-else-if="isCameraActive && !capturedPhoto" class="mood-form__camera-container">
+                    <div
+                        v-show="isCameraActive && !capturedPhoto && !isLoading"
+                        class="mood-form__camera-container"
+                    >
                         <video
                             ref="videoElement"
                             class="mood-form__video"
@@ -214,8 +220,11 @@ defineExpose({ openForm });
                         />
                     </div>
 
-                    <div v-else-if="capturedPhoto" class="mood-form__photo-preview">
-                        <img :src="capturedPhoto" :alt="t('form.photoPreview')" />
+                    <div v-if="capturedPhoto" class="mood-form__photo-preview">
+                        <img
+                            :src="capturedPhoto"
+                            :alt="t('form.photoPreview')"
+                        />
                         <Button
                             type="button"
                             :label="t('form.retakePhoto')"
@@ -227,7 +236,6 @@ defineExpose({ openForm });
                     </div>
                 </div>
 
-                <!-- Form Fields -->
                 <div class="mood-form__field">
                     <label for="email">{{ t('form.email') }}</label>
                     <InputText
