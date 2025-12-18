@@ -15,7 +15,6 @@ const getHeaders = () => {
 const Http = axios.create({
     headers: getHeaders(),
     baseURL: BASE_URL,
-    withCredentials: true,
 });
 
 Http.interceptors.request.use(handleAcceptLanguageInterceptor);

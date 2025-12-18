@@ -3,18 +3,33 @@ import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue3-toastify';
 import Card from 'primevue/card';
+import Button from 'primevue/button';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import { useUserPhoto } from '@/composables/useUserPhoto';
+import { useGeolocation } from '@/composables/useGeolocation';
+import { useMood } from '@/composables/useMood';
+import { groupMoodsByLocation, calculateGroupCenter } from '@/utils/moodClustering';
+import {
+    createUserMarkerIcon,
+    createMoodMarkerIcon,
+    createClusterIcon,
+    createSingleMoodPopup,
+    createMultiMoodPopup,
+} from '@/utils/mapIcons';
 
 const { t } = useI18n();
 const { userPhoto } = useUserPhoto();
+const { getCurrentPosition, isLoadingPosition, geolocationError } =
+    useGeolocation();
+const { moods, refetch: refetchMoods } = useMood();
 const mapContainer = ref<HTMLElement | null>(null);
-const isLoadingLocation = ref(true);
 const mapInstance = ref<L.Map | null>(null);
 const currentMarker = ref<L.Marker | null>(null);
+const moodMarkers = ref<L.Marker[]>([]);
 const hasUserLocation = ref(false);
+const userPosition = ref<{ lat: number; lng: number } | null>(null);
 
 onMounted(() => {
     if (!mapContainer.value) {
@@ -23,9 +38,14 @@ onMounted(() => {
 
     requestGeolocation();
     initPermissionWatcher();
+
+    if (moods.value?.moods) {
+        displayMoodMarkers();
+    }
 });
 
 onUnmounted(() => {
+    clearMoodMarkers();
     if (mapInstance.value) {
         mapInstance.value.remove();
         mapInstance.value = null;
@@ -46,7 +66,7 @@ const initMap = (lat: number, lng: number, isUserLocation = false) => {
         },
     ).addTo(mapInstance.value as L.Map);
 
-    const icon = createMarkerIcon(userPhoto.value);
+    const icon = createUserMarkerIcon(userPhoto.value);
     const markerOptions = icon ? { icon } : {};
 
     currentMarker.value = L.marker([lat, lng], markerOptions).addTo(
@@ -54,21 +74,6 @@ const initMap = (lat: number, lng: number, isUserLocation = false) => {
     );
 
     hasUserLocation.value = isUserLocation;
-    isLoadingLocation.value = false;
-};
-
-const createMarkerIcon = (photo?: string | null) => {
-    if (photo) {
-        return L.divIcon({
-            html: `<div style="width: var(--scale-20r); height: var(--scale-20r); border-radius: 50%; overflow: hidden; border: var(--scale-1r) solid var(--color-primary); background: white;">
-                <img src="${photo}" style="width: 100%; height: 100%; object-fit: cover;" />
-            </div>`,
-            className: '',
-            iconSize: [80, 80],
-            iconAnchor: [40, 40],
-        });
-    }
-    return undefined;
 };
 
 const updateMapLocation = (
@@ -84,7 +89,7 @@ const updateMapLocation = (
         currentMarker.value.remove();
     }
 
-    const icon = createMarkerIcon(userPhoto.value);
+    const icon = createUserMarkerIcon(userPhoto.value);
     const markerOptions = icon ? { icon } : {};
 
     currentMarker.value = L.marker([lat, lng], markerOptions).addTo(
@@ -92,44 +97,58 @@ const updateMapLocation = (
     );
 
     hasUserLocation.value = isUserLocation;
-    isLoadingLocation.value = false;
 };
 
-const requestGeolocation = () => {
-    if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                if (mapInstance.value && !hasUserLocation.value) {
-                    updateMapLocation(latitude, longitude, true);
-                } else {
-                    initMap(latitude, longitude, true);
-                }
-            },
-            (error) => {
-                if (error.code === error.PERMISSION_DENIED) {
-                    toast.error(t('map.geolocationDenied'));
-                } else {
-                    toast.error(t('map.geolocationError'));
-                }
-                isLoadingLocation.value = false;
-                if (!mapInstance.value) {
-                    initMap(48.8566, 2.3522, false);
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-            },
-        );
-    } else {
-        toast.error(t('map.geolocationNotSupported'));
-        isLoadingLocation.value = false;
+const requestGeolocation = async () => {
+    try {
+        const position = await getCurrentPosition();
+        userPosition.value = position;
+
+        if (mapInstance.value) {
+            updateMapLocation(position.lat, position.lng, true);
+        } else {
+            initMap(position.lat, position.lng, true);
+        }
+
+        await refetchMoods();
+        if (moods.value?.moods) {
+            displayMoodMarkers();
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === 'Geolocation not supported') {
+                toast.error(t('map.geolocationNotSupported'));
+            } else {
+                toast.error(t('map.geolocationError'));
+            }
+        } else if (geolocationError.value) {
+            if (
+                geolocationError.value.code ===
+                geolocationError.value.PERMISSION_DENIED
+            ) {
+                toast.error(t('map.geolocationDenied'));
+            } else {
+                toast.error(t('map.geolocationError'));
+            }
+        }
+
         if (!mapInstance.value) {
             initMap(48.8566, 2.3522, false);
         }
     }
+};
+
+const recenterMap = () => {
+    if (!userPosition.value || !mapInstance.value) {
+        toast.warning(t('map.noUserLocation'));
+        return;
+    }
+
+    mapInstance.value.setView(
+        [userPosition.value.lat, userPosition.value.lng],
+        13,
+    );
+    toast.success(t('map.recentered'));
 };
 
 const initPermissionWatcher = async () => {
@@ -140,7 +159,6 @@ const initPermissionWatcher = async () => {
             });
             permission.addEventListener('change', () => {
                 if (permission.state === 'granted' && !hasUserLocation.value) {
-                    isLoadingLocation.value = true;
                     requestGeolocation();
                 } else if (
                     permission.state === 'denied' &&
@@ -157,12 +175,45 @@ const initPermissionWatcher = async () => {
     }
 };
 
+const clearMoodMarkers = () => {
+    moodMarkers.value.forEach((marker) => marker.remove());
+    moodMarkers.value = [];
+};
+
+const displayMoodMarkers = () => {
+    if (!mapInstance.value || !moods.value?.moods) return;
+
+    clearMoodMarkers();
+
+    const moodGroups = groupMoodsByLocation(moods.value.moods);
+
+    moodGroups.forEach((group) => {
+        const { lat, lng } = calculateGroupCenter(group);
+
+        let icon;
+        let popupContent;
+
+        if (group.length === 1) {
+            icon = createMoodMarkerIcon(group[0]);
+            popupContent = createSingleMoodPopup(group[0]);
+        } else {
+            icon = createClusterIcon(group.length);
+            popupContent = createMultiMoodPopup(group);
+        }
+
+        const marker = L.marker([lat, lng], { icon });
+        marker.bindPopup(popupContent, { maxWidth: 350 });
+        marker.addTo(mapInstance.value as L.Map);
+        moodMarkers.value.push(marker);
+    });
+};
+
 watch(userPhoto, (newPhoto) => {
     if (currentMarker.value && mapInstance.value) {
         const position = currentMarker.value.getLatLng();
         currentMarker.value.remove();
 
-        const icon = createMarkerIcon(newPhoto);
+        const icon = createUserMarkerIcon(newPhoto);
         const markerOptions = icon ? { icon } : {};
 
         currentMarker.value = L.marker(position, markerOptions).addTo(
@@ -170,11 +221,19 @@ watch(userPhoto, (newPhoto) => {
         );
     }
 });
+
+watch(
+    () => moods.value?.moods,
+    () => {
+        displayMoodMarkers();
+    },
+    { deep: true },
+);
 </script>
 
 <template>
     <div class="map-view">
-        <Card v-if="isLoadingLocation" class="map-view__loading">
+        <Card v-if="isLoadingPosition" class="map-view__loading">
             <template #content>
                 <div class="map-view__loading-content">
                     <LoadingSpinner />
@@ -182,6 +241,16 @@ watch(userPhoto, (newPhoto) => {
                 </div>
             </template>
         </Card>
+
+        <Button
+            v-if="userPosition"
+            class="map-view__recenter-btn"
+            icon="pi pi-compass"
+            rounded
+            @click="recenterMap"
+            :title="t('map.recenter')"
+        />
+
         <div ref="mapContainer" class="map-view__container" />
     </div>
 </template>
@@ -193,7 +262,10 @@ watch(userPhoto, (newPhoto) => {
             "loading": "Obtention de votre position...",
             "geolocationError": "Impossible d'obtenir votre position",
             "geolocationDenied": "Accès à la géolocalisation refusé",
-            "geolocationNotSupported": "Géolocalisation non supportée par votre navigateur"
+            "geolocationNotSupported": "Géolocalisation non supportée par votre navigateur",
+            "recenter": "Recentrer sur ma position",
+            "noUserLocation": "Position utilisateur non disponible",
+            "recentered": "Carte recentrée sur votre position"
         }
     }
 }
@@ -205,6 +277,7 @@ watch(userPhoto, (newPhoto) => {
 .map-view {
     width: 100%;
     height: 100%;
+    position: relative;
 
     &__container {
         width: 100%;
@@ -229,6 +302,13 @@ watch(userPhoto, (newPhoto) => {
 
     &__loading-text {
         color: var(--color-description);
+    }
+
+    &__recenter-btn {
+        position: fixed !important;
+        top: var(--scale-8r) !important;
+        right: var(--scale-8r) !important;
+        z-index: 500 !important;
     }
 }
 </style>
