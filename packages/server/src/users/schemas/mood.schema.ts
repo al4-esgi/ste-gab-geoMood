@@ -1,5 +1,4 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { MinioFile } from "../../minio/minio-file.schema";
 import { Location, LocationSchema } from "./location.schema";
 import { Weather, WeatherSchema } from "./weather.schema";
 
@@ -19,8 +18,8 @@ export class Mood {
   @Prop({ type: WeatherSchema, required: true })
   weather: Weather;
 
-  @Prop({ type: Object, required: false })
-  picture?: MinioFile;
+  @Prop({ type: String })
+  picture?: string;
 
   @Prop()
   createdAt?: Date;
