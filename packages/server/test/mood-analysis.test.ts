@@ -1,15 +1,12 @@
-import { HttpModule } from '@nestjs/axios'
-import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { MemoryStoredFile } from 'nestjs-form-data'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { validateEnv } from '../src/_utils/config/env.config'
 import { AnalysisRating, MoodRating } from '../src/_utils/types/mood-rating'
 import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/moods/_utils/dto/response/weather-api-response.dto'
-import { MoodsModule } from '../src/moods/moods.module'
 import { MoodsService } from '../src/moods/moods.service'
+import { TestModule } from './mocks/test.module'
 
 /*
 ### 2. Mood Analysis
@@ -28,15 +25,7 @@ describe('Mood Analysis', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        MoodsModule,
-        HttpModule,
-        ConfigModule.forRoot({
-          validate: validateEnv,
-          isGlobal: true,
-          envFilePath: ['.env.development', '.env'],
-        }),
-      ],
+      imports: [TestModule],
     }).compile()
     moodService = module.get(MoodsService)
   })
