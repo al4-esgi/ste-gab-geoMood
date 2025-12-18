@@ -14,7 +14,8 @@ import type { Mood } from '@/types/Mood.type';
 
 const { t } = useI18n();
 const { userPhoto } = useUserPhoto();
-const { getCurrentPosition, isLoadingPosition, geolocationError } = useGeolocation();
+const { getCurrentPosition, isLoadingPosition, geolocationError } =
+    useGeolocation();
 const { moods } = useMood();
 const mapContainer = ref<HTMLElement | null>(null);
 const mapInstance = ref<L.Map | null>(null);
@@ -72,7 +73,7 @@ const createMarkerIcon = (photo?: string | null, isCurrentUser = true) => {
     if (photo) {
         const borderColor = isCurrentUser ? 'var(--color-primary)' : '#6c757d';
         return L.divIcon({
-            html: `<div style="width: var(--scale-20r); height: var(--scale-20r); border-radius: 50%; overflow: hidden; border: var(--scale-1r) solid ${borderColor}; background: white;">
+            html: `<div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid ${borderColor}; background: white;">
                 <img src="${photo}" style="width: 100%; height: 100%; object-fit: cover;" />
             </div>`,
             className: '',
@@ -90,25 +91,29 @@ const createMoodMarkerIcon = (mood: Mood) => {
 
     if (mood.picture) {
         return L.divIcon({
-            html: `<div style="width: var(--scale-15r); height: var(--scale-15r); border-radius: 50%; overflow: hidden; border: 3px solid ${color}; background: white; position: relative;">
-                <img src="${mood.picture}" style="width: 100%; height: 100%; object-fit: cover;" />
-                <div style="position: absolute; bottom: -5px; right: -5px; background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 2px solid ${color}; font-size: 18px;">
+            html: `<div style="position: relative; width: 80px; height: 80px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid ${color}; background: white;">
+                    <img src="${mood.picture}" style="width: 100%; height: 100%; object-fit: cover;" />
+                </div>
+                <div style="position: absolute; bottom: -10px; right: -10px; background: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 3px solid ${color}; font-size: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
                     ${emoji}
                 </div>
             </div>`,
             className: '',
-            iconSize: [60, 60],
-            iconAnchor: [30, 30],
+            iconSize: [80, 80],
+            iconAnchor: [40, 40],
         });
     }
 
     return L.divIcon({
-        html: `<div style="width: 50px; height: 50px; border-radius: 50%; background: ${color}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px;">
-            ${emoji}
+        html: `<div style="position: relative; width: 70px; height: 70px;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; background: ${color}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 32px;">
+                ${emoji}
+            </div>
         </div>`,
         className: '',
-        iconSize: [50, 50],
-        iconAnchor: [25, 25],
+        iconSize: [70, 70],
+        iconAnchor: [35, 35],
     });
 };
 
@@ -153,7 +158,10 @@ const requestGeolocation = async () => {
                 toast.error(t('map.geolocationError'));
             }
         } else if (geolocationError.value) {
-            if (geolocationError.value.code === geolocationError.value.PERMISSION_DENIED) {
+            if (
+                geolocationError.value.code ===
+                geolocationError.value.PERMISSION_DENIED
+            ) {
                 toast.error(t('map.geolocationDenied'));
             } else {
                 toast.error(t('map.geolocationError'));
@@ -172,7 +180,10 @@ const recenterMap = () => {
         return;
     }
 
-    mapInstance.value.setView([userPosition.value.lat, userPosition.value.lng], 13);
+    mapInstance.value.setView(
+        [userPosition.value.lat, userPosition.value.lng],
+        13,
+    );
     toast.success(t('map.recentered'));
 };
 
@@ -212,7 +223,9 @@ const displayMoodMarkers = () => {
 
     moods.value.moods.forEach((mood: Mood) => {
         const icon = createMoodMarkerIcon(mood);
-        const marker = L.marker([mood.location.lat, mood.location.lng], { icon });
+        const marker = L.marker([mood.location.lat, mood.location.lng], {
+            icon,
+        });
 
         const popupContent = `
             <div style="padding: 8px; min-width: 200px;">
@@ -249,7 +262,7 @@ watch(
     () => {
         displayMoodMarkers();
     },
-    { deep: true }
+    { deep: true },
 );
 </script>
 
@@ -330,7 +343,7 @@ watch(
         position: fixed !important;
         top: var(--scale-8r) !important;
         right: var(--scale-8r) !important;
-        z-index: vars.$zIndex-notification !important;
+        z-index: 500 !important;
     }
 }
 </style>

@@ -292,7 +292,8 @@ defineExpose({ openForm });
     &__trigger {
         position: fixed !important;
         bottom: var(--scale-8r) !important;
-        right: var(--scale-8r) !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
         z-index: vars.$zIndex-notification !important;
     }
 
