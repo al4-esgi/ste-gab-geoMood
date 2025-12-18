@@ -6,7 +6,8 @@ import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data'
 import { type EnvironmentVariables, validateEnv } from './_utils/config/env.config'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-// import { MinioModule } from './minio/minio.module'
+import { MoodsModule } from './moods/moods.module'
+import { UsersModule } from './users/users.module'
 
 @Module({
   imports: [
@@ -15,7 +16,6 @@ import { AppService } from './app.service'
       isGlobal: true,
       envFilePath: ['.env.development', '.env'],
     }),
-    // MinioModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -26,6 +26,8 @@ import { AppService } from './app.service'
     }),
     NestjsFormDataModule.config({ isGlobal: true, storage: MemoryStoredFile }),
     HttpModule,
+    UsersModule,
+    MoodsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
