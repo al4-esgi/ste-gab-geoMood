@@ -15,3 +15,6 @@
 3. XP avec Gabriel
 4. fix d'un bug d'injection de dépendance dû au bundler
 5. Red tests pour la creation d'un score utilisateur
+6. Implémentation de l'analyse de sentiment par photo avec Gemini Vision API
+7. Mécanisme de fallback basé sur des mots-clés pour l'analyse de texte
+8. Validation de schéma avec la librairie Effect

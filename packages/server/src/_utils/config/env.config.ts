@@ -1,7 +1,7 @@
+import { exit } from 'node:process'
 import { Logger } from '@nestjs/common'
 import { plainToInstance, Type } from 'class-transformer'
 import { IsNumber, IsOptional, IsString, ValidateNested, validateSync } from 'class-validator'
-import { exit } from 'node:process'
 
 export class DatabaseConfig {
   @IsString()
