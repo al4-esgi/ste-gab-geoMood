@@ -11,6 +11,8 @@ import { UsersRepository } from "../src/users/users.repository";
 import { MoodsModule } from "../src/moods/moods.module";
 import { MoodsService } from "../src/moods/moods.service";
 import { TestModule } from "./mocks/test.module";
+import * as fs from "fs";
+import * as path from "path";
 
 /*
 ### API Routes Tests
@@ -87,6 +89,37 @@ describe("API Routes", { timeout: 30000 }, () => {
       expect(response.body).toBeDefined();
       expect(response.body.textContent).toBe("Feeling great today!");
       expect(response.body.rating).toBeDefined();
+    });
+
+    it("should submit mood with picture and analyze sentiment from image", async () => {
+      const happyImagePath = path.join(
+        __dirname,
+        "mocks",
+        "portraits",
+        "happy.jpg"
+      );
+      const imageBuffer = fs.readFileSync(happyImagePath);
+
+      const response = await request(app.getHttpServer())
+        .post("/api/v1/moods")
+        .field("email", testUserEmail)
+        .field("textContent", "Beautiful sunset!")
+        .field("rating", 3)
+        .field("location", JSON.stringify(mockLocation))
+        .attach("picture", imageBuffer, {
+          filename: "happy.jpg",
+          contentType: "image/jpeg",
+        });
+
+      if (response.status !== 201) {
+        console.log("Response status:", response.status);
+        console.log("Response body:", JSON.stringify(response.body, null, 2));
+      }
+
+      expect(response.status).toBe(201);
+
+      expect(response.body).toBeDefined();
+      expect(response.body.picture).toBeDefined();
     });
 
     it("should return 400 if email is missing", async () => {
