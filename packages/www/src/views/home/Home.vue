@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import MapView from './partials/MapView.vue';
-import CameraCapture from './partials/CameraCapture.vue';
 import MoodForm from './partials/MoodForm.vue';
 </script>
 
 <template>
     <div class="home">
         <MapView />
-        <CameraCapture />
         <MoodForm />
     </div>
 </template>
