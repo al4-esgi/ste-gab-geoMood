@@ -66,12 +66,23 @@ const startCamera = async () => {
             videoElement.value.srcObject = stream;
             videoElement.value.muted = true;
             videoElement.value.playsInline = true;
-            await videoElement.value.play();
-            isCameraActive.value = true;
+
+            try {
+                await videoElement.value.play();
+                isCameraActive.value = true;
+                isLoadingCamera.value = false;
+            } catch (playError) {
+                console.error('Error playing video:', playError);
+                toast.error(t('form.cameraError'));
+            }
+        } else {
+            console.error('Video element not found');
+            toast.error(t('form.cameraError'));
+            isLoadingCamera.value = false;
         }
     } catch (error) {
+        console.error('Camera access error:', error);
         toast.error(t('form.cameraError'));
-    } finally {
         isLoadingCamera.value = false;
     }
 };
