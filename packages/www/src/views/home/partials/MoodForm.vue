@@ -98,8 +98,14 @@ defineExpose({ openForm });
             :dismissableMask="true"
             :header="t('form.title')"
             class="mood-form__dialog"
+            :style="{ width: '90vw', maxWidth: '600px' }"
         >
             <form @submit.prevent="handleSubmit" class="mood-form__content">
+                <div v-if="userPhoto" class="mood-form__photo-preview">
+                    <img :src="userPhoto" :alt="t('form.photoPreview')" />
+                    <p class="mood-form__photo-label">{{ t('form.photoAttached') }}</p>
+                </div>
+
                 <div class="mood-form__field">
                     <label for="email">{{ t('form.email') }}</label>
                     <InputText
@@ -162,7 +168,33 @@ defineExpose({ openForm });
         display: flex;
         flex-direction: column;
         gap: var(--scale-6r);
+        padding: var(--scale-2r) 0;
+    }
+
+    &__photo-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--scale-2r);
         padding: var(--scale-4r);
+        background: var(--color-surface-50);
+        border-radius: var(--scale-2r);
+        border: 2px dashed var(--color-primary);
+
+        img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--color-primary);
+        }
+    }
+
+    &__photo-label {
+        font-size: var(--scale-3r);
+        color: var(--color-primary);
+        font-weight: 600;
+        margin: 0;
     }
 
     &__field {
@@ -199,7 +231,9 @@ defineExpose({ openForm });
             "submit": "Envoyer",
             "fillRequired": "Veuillez remplir tous les champs requis",
             "success": "Mood ajouté avec succès !",
-            "error": "Erreur lors de l'ajout du mood"
+            "error": "Erreur lors de l'ajout du mood",
+            "photoPreview": "Aperçu de la photo",
+            "photoAttached": "Photo attachée"
         }
     }
 }
