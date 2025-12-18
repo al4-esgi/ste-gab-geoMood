@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue3-toastify';
 import Card from 'primevue/card';
@@ -8,13 +8,17 @@ import 'leaflet/dist/leaflet.css';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import { useUserPhoto } from '@/composables/useUserPhoto';
 import { useGeolocation } from '@/composables/useGeolocation';
+import { useMood } from '@/composables/useMood';
+import type { Mood } from '@/types/Mood.type';
 
 const { t } = useI18n();
 const { userPhoto } = useUserPhoto();
 const { getCurrentPosition, isLoadingPosition, geolocationError } = useGeolocation();
+const { moods } = useMood();
 const mapContainer = ref<HTMLElement | null>(null);
 const mapInstance = ref<L.Map | null>(null);
 const currentMarker = ref<L.Marker | null>(null);
+const moodMarkers = ref<L.Marker[]>([]);
 const hasUserLocation = ref(false);
 
 onMounted(() => {
@@ -24,9 +28,14 @@ onMounted(() => {
 
     requestGeolocation();
     initPermissionWatcher();
+
+    if (moods.value?.moods) {
+        displayMoodMarkers();
+    }
 });
 
 onUnmounted(() => {
+    clearMoodMarkers();
     if (mapInstance.value) {
         mapInstance.value.remove();
         mapInstance.value = null;
@@ -57,10 +66,11 @@ const initMap = (lat: number, lng: number, isUserLocation = false) => {
     hasUserLocation.value = isUserLocation;
 };
 
-const createMarkerIcon = (photo?: string | null) => {
+const createMarkerIcon = (photo?: string | null, isCurrentUser = true) => {
     if (photo) {
+        const borderColor = isCurrentUser ? 'var(--color-primary)' : '#6c757d';
         return L.divIcon({
-            html: `<div style="width: var(--scale-20r); height: var(--scale-20r); border-radius: 50%; overflow: hidden; border: var(--scale-1r) solid var(--color-primary); background: white;">
+            html: `<div style="width: var(--scale-20r); height: var(--scale-20r); border-radius: 50%; overflow: hidden; border: var(--scale-1r) solid ${borderColor}; background: white;">
                 <img src="${photo}" style="width: 100%; height: 100%; object-fit: cover;" />
             </div>`,
             className: '',
@@ -69,6 +79,35 @@ const createMarkerIcon = (photo?: string | null) => {
         });
     }
     return undefined;
+};
+
+const createMoodMarkerIcon = (mood: Mood) => {
+    const emoji = ['😢', '😕', '😐', '🙂', '😄'][mood.rating - 1] || '😐';
+    const colors = ['#e74c3c', '#e67e22', '#f39c12', '#2ecc71', '#27ae60'];
+    const color = colors[mood.rating - 1] || '#f39c12';
+
+    if (mood.picture) {
+        return L.divIcon({
+            html: `<div style="width: var(--scale-15r); height: var(--scale-15r); border-radius: 50%; overflow: hidden; border: 3px solid ${color}; background: white; position: relative;">
+                <img src="${mood.picture}" style="width: 100%; height: 100%; object-fit: cover;" />
+                <div style="position: absolute; bottom: -5px; right: -5px; background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 2px solid ${color}; font-size: 18px;">
+                    ${emoji}
+                </div>
+            </div>`,
+            className: '',
+            iconSize: [60, 60],
+            iconAnchor: [30, 30],
+        });
+    }
+
+    return L.divIcon({
+        html: `<div style="width: 50px; height: 50px; border-radius: 50%; background: ${color}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+            ${emoji}
+        </div>`,
+        className: '',
+        iconSize: [50, 50],
+        iconAnchor: [25, 25],
+    });
 };
 
 const updateMapLocation = (
@@ -148,6 +187,36 @@ const initPermissionWatcher = async () => {
     }
 };
 
+const clearMoodMarkers = () => {
+    moodMarkers.value.forEach((marker) => marker.remove());
+    moodMarkers.value = [];
+};
+
+const displayMoodMarkers = () => {
+    if (!mapInstance.value || !moods.value?.moods) return;
+
+    clearMoodMarkers();
+
+    moods.value.moods.forEach((mood: Mood) => {
+        const icon = createMoodMarkerIcon(mood);
+        const marker = L.marker([mood.location.lat, mood.location.lng], { icon });
+
+        const popupContent = `
+            <div style="padding: 8px; min-width: 200px;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">${mood.email}</p>
+                <p style="margin: 0 0 8px 0;">${mood.textContent}</p>
+                <p style="margin: 0; color: #666; font-size: 12px;">
+                    ${new Date(mood.createdAt).toLocaleString('fr-FR')}
+                </p>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent);
+        marker.addTo(mapInstance.value as L.Map);
+        moodMarkers.value.push(marker);
+    });
+};
+
 watch(userPhoto, (newPhoto) => {
     if (currentMarker.value && mapInstance.value) {
         const position = currentMarker.value.getLatLng();
@@ -161,6 +230,14 @@ watch(userPhoto, (newPhoto) => {
         );
     }
 });
+
+watch(
+    () => moods.value?.moods,
+    () => {
+        displayMoodMarkers();
+    },
+    { deep: true }
+);
 </script>
 
 <template>
