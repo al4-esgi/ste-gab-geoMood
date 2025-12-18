@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue3-toastify';
 import Card from 'primevue/card';
+import Button from 'primevue/button';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
@@ -20,6 +21,7 @@ const mapInstance = ref<L.Map | null>(null);
 const currentMarker = ref<L.Marker | null>(null);
 const moodMarkers = ref<L.Marker[]>([]);
 const hasUserLocation = ref(false);
+const userPosition = ref<{ lat: number; lng: number } | null>(null);
 
 onMounted(() => {
     if (!mapContainer.value) {
@@ -136,6 +138,7 @@ const updateMapLocation = (
 const requestGeolocation = async () => {
     try {
         const position = await getCurrentPosition();
+        userPosition.value = position;
 
         if (mapInstance.value) {
             updateMapLocation(position.lat, position.lng, true);
@@ -161,6 +164,16 @@ const requestGeolocation = async () => {
             initMap(48.8566, 2.3522, false);
         }
     }
+};
+
+const recenterMap = () => {
+    if (!userPosition.value || !mapInstance.value) {
+        toast.warning(t('map.noUserLocation'));
+        return;
+    }
+
+    mapInstance.value.setView([userPosition.value.lat, userPosition.value.lng], 13);
+    toast.success(t('map.recentered'));
 };
 
 const initPermissionWatcher = async () => {
@@ -250,6 +263,16 @@ watch(
                 </div>
             </template>
         </Card>
+
+        <Button
+            v-if="userPosition"
+            class="map-view__recenter-btn"
+            icon="pi pi-compass"
+            rounded
+            @click="recenterMap"
+            :title="t('map.recenter')"
+        />
+
         <div ref="mapContainer" class="map-view__container" />
     </div>
 </template>
@@ -261,7 +284,10 @@ watch(
             "loading": "Obtention de votre position...",
             "geolocationError": "Impossible d'obtenir votre position",
             "geolocationDenied": "Accès à la géolocalisation refusé",
-            "geolocationNotSupported": "Géolocalisation non supportée par votre navigateur"
+            "geolocationNotSupported": "Géolocalisation non supportée par votre navigateur",
+            "recenter": "Recentrer sur ma position",
+            "noUserLocation": "Position utilisateur non disponible",
+            "recentered": "Carte recentrée sur votre position"
         }
     }
 }
@@ -273,6 +299,7 @@ watch(
 .map-view {
     width: 100%;
     height: 100%;
+    position: relative;
 
     &__container {
         width: 100%;
@@ -297,6 +324,13 @@ watch(
 
     &__loading-text {
         color: var(--color-description);
+    }
+
+    &__recenter-btn {
+        position: fixed !important;
+        top: var(--scale-8r) !important;
+        right: var(--scale-8r) !important;
+        z-index: vars.$zIndex-notification !important;
     }
 }
 </style>

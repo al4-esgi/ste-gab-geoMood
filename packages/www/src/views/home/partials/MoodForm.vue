@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue3-toastify';
 import Dialog from 'primevue/dialog';
@@ -9,24 +9,31 @@ import Rating from 'primevue/rating';
 import InputText from 'primevue/inputtext';
 import { useMood } from '@/composables/useMood';
 import { useGeolocation } from '@/composables/useGeolocation';
-import { useUserPhoto } from '@/composables/useUserPhoto';
 import type { CreateMoodPayload } from '@/types/Mood.type';
 
 const { t } = useI18n();
 const { createMood, isCreating } = useMood();
 const { getCurrentPosition } = useGeolocation();
-const { userPhoto } = useUserPhoto();
 
 const showDialog = ref(false);
 const textContent = ref('');
 const rating = ref(3);
 const email = ref('');
+const capturedPhoto = ref<string | null>(null);
+const videoElement = ref<HTMLVideoElement | null>(null);
+const canvasElement = ref<HTMLCanvasElement | null>(null);
+const mediaStream = ref<MediaStream | null>(null);
+const isCameraActive = ref(false);
+const isLoadingCamera = ref(false);
 
-const openForm = () => {
+const openForm = async () => {
     showDialog.value = true;
+    await nextTick();
+    startCamera();
 };
 
 const closeForm = () => {
+    stopCamera();
     showDialog.value = false;
     resetForm();
 };
@@ -35,6 +42,72 @@ const resetForm = () => {
     textContent.value = '';
     rating.value = 3;
     email.value = '';
+    capturedPhoto.value = null;
+};
+
+const startCamera = async () => {
+    try {
+        isLoadingCamera.value = true;
+        await nextTick();
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: 'user',
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+            },
+            audio: false,
+        });
+
+        mediaStream.value = stream;
+        await nextTick();
+
+        if (videoElement.value) {
+            videoElement.value.srcObject = stream;
+            videoElement.value.muted = true;
+            videoElement.value.playsInline = true;
+            await videoElement.value.play();
+            isCameraActive.value = true;
+        }
+    } catch (error) {
+        toast.error(t('form.cameraError'));
+    } finally {
+        isLoadingCamera.value = false;
+    }
+};
+
+const stopCamera = () => {
+    if (mediaStream.value) {
+        mediaStream.value.getTracks().forEach((track) => track.stop());
+        mediaStream.value = null;
+    }
+    if (videoElement.value) {
+        videoElement.value.srcObject = null;
+    }
+    isCameraActive.value = false;
+};
+
+const capturePhoto = () => {
+    if (!videoElement.value || !canvasElement.value) return;
+
+    const video = videoElement.value;
+    const canvas = canvasElement.value;
+    const context = canvas.getContext('2d');
+
+    if (!context) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    capturedPhoto.value = canvas.toDataURL('image/png');
+    stopCamera();
+    toast.success(t('form.photoTaken'));
+};
+
+const retakePhoto = () => {
+    capturedPhoto.value = null;
+    startCamera();
 };
 
 const dataURLtoFile = (dataURL: string, filename: string): File => {
@@ -55,6 +128,11 @@ const handleSubmit = async () => {
         return;
     }
 
+    if (!capturedPhoto.value) {
+        toast.error(t('form.photoRequired'));
+        return;
+    }
+
     try {
         const position = await getCurrentPosition();
 
@@ -63,11 +141,8 @@ const handleSubmit = async () => {
             rating: rating.value,
             email: email.value,
             location: position,
+            picture: dataURLtoFile(capturedPhoto.value, 'mood-photo.png'),
         };
-
-        if (userPhoto.value) {
-            payload.picture = dataURLtoFile(userPhoto.value, 'user-photo.png');
-        }
 
         await createMood(payload);
         toast.success(t('form.success'));
@@ -76,6 +151,12 @@ const handleSubmit = async () => {
         toast.error(t('form.error'));
     }
 };
+
+watch(showDialog, (newVal) => {
+    if (!newVal) {
+        stopCamera();
+    }
+});
 
 defineExpose({ openForm });
 </script>
@@ -101,11 +182,44 @@ defineExpose({ openForm });
             :style="{ width: '90vw', maxWidth: '600px' }"
         >
             <form @submit.prevent="handleSubmit" class="mood-form__content">
-                <div v-if="userPhoto" class="mood-form__photo-preview">
-                    <img :src="userPhoto" :alt="t('form.photoPreview')" />
-                    <p class="mood-form__photo-label">{{ t('form.photoAttached') }}</p>
+                <!-- Camera Section -->
+                <div class="mood-form__camera-section">
+                    <div v-if="isLoadingCamera" class="mood-form__camera-loading">
+                        <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+                        <p>{{ t('form.cameraLoading') }}</p>
+                    </div>
+
+                    <div v-else-if="isCameraActive && !capturedPhoto" class="mood-form__camera-container">
+                        <video
+                            ref="videoElement"
+                            class="mood-form__video"
+                            autoplay
+                            playsinline
+                            muted
+                        />
+                        <Button
+                            type="button"
+                            :label="t('form.takePhoto')"
+                            icon="pi pi-camera"
+                            @click="capturePhoto"
+                            class="mood-form__capture-btn"
+                        />
+                    </div>
+
+                    <div v-else-if="capturedPhoto" class="mood-form__photo-preview">
+                        <img :src="capturedPhoto" :alt="t('form.photoPreview')" />
+                        <Button
+                            type="button"
+                            :label="t('form.retakePhoto')"
+                            icon="pi pi-refresh"
+                            @click="retakePhoto"
+                            severity="secondary"
+                            size="small"
+                        />
+                    </div>
                 </div>
 
+                <!-- Form Fields -->
                 <div class="mood-form__field">
                     <label for="email">{{ t('form.email') }}</label>
                     <InputText
@@ -149,6 +263,8 @@ defineExpose({ openForm });
                     />
                 </div>
             </form>
+
+            <canvas ref="canvasElement" class="mood-form__canvas" />
         </Dialog>
     </div>
 </template>
@@ -171,30 +287,68 @@ defineExpose({ openForm });
         padding: var(--scale-2r) 0;
     }
 
+    &__camera-section {
+        width: 100%;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__camera-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--scale-4r);
+        padding: var(--scale-8r);
+
+        p {
+            margin: 0;
+            color: var(--color-description);
+        }
+    }
+
+    &__camera-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--scale-4r);
+    }
+
+    &__video {
+        width: 100%;
+        max-height: 400px;
+        border-radius: var(--scale-2r);
+        background: black;
+        object-fit: contain;
+    }
+
+    &__capture-btn {
+        width: 100%;
+    }
+
     &__photo-preview {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: var(--scale-2r);
+        gap: var(--scale-4r);
         padding: var(--scale-4r);
         background: var(--color-surface-50);
         border-radius: var(--scale-2r);
         border: 2px dashed var(--color-primary);
 
         img {
-            width: 100px;
-            height: 100px;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid var(--color-primary);
         }
     }
 
-    &__photo-label {
-        font-size: var(--scale-3r);
-        color: var(--color-primary);
-        font-weight: 600;
-        margin: 0;
+    &__canvas {
+        display: none;
     }
 
     &__field {
@@ -230,10 +384,15 @@ defineExpose({ openForm });
             "cancel": "Annuler",
             "submit": "Envoyer",
             "fillRequired": "Veuillez remplir tous les champs requis",
+            "photoRequired": "Veuillez prendre une photo",
             "success": "Mood ajouté avec succès !",
             "error": "Erreur lors de l'ajout du mood",
             "photoPreview": "Aperçu de la photo",
-            "photoAttached": "Photo attachée"
+            "takePhoto": "Prendre la photo",
+            "retakePhoto": "Reprendre",
+            "cameraLoading": "Chargement de la caméra...",
+            "cameraError": "Impossible d'accéder à la caméra",
+            "photoTaken": "Photo capturée avec succès !"
         }
     }
 }
