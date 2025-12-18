@@ -16,7 +16,7 @@ const { t } = useI18n();
 const { userPhoto } = useUserPhoto();
 const { getCurrentPosition, isLoadingPosition, geolocationError } =
     useGeolocation();
-const { moods } = useMood();
+const { moods, refetch: refetchMoods } = useMood();
 const mapContainer = ref<HTMLElement | null>(null);
 const mapInstance = ref<L.Map | null>(null);
 const currentMarker = ref<L.Marker | null>(null);
@@ -85,17 +85,16 @@ const createMarkerIcon = (photo?: string | null, isCurrentUser = true) => {
 };
 
 const createMoodMarkerIcon = (mood: Mood) => {
-    const emoji = ['😢', '😕', '😐', '🙂', '😄'][mood.rating - 1] || '😐';
-    const colors = ['#e74c3c', '#e67e22', '#f39c12', '#2ecc71', '#27ae60'];
-    const color = colors[mood.rating - 1] || '#f39c12';
+    const rating = Math.round(mood.rating);
+    const emoji = ['😢', '😕', '😐', '🙂', '😄'][rating - 1] || '😐';
 
     if (mood.picture) {
         return L.divIcon({
             html: `<div style="position: relative; width: 80px; height: 80px;">
-                <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid ${color}; background: white;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-primary); background: white;">
                     <img src="${mood.picture}" style="width: 100%; height: 100%; object-fit: cover;" />
                 </div>
-                <div style="position: absolute; bottom: -10px; right: -10px; background: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 3px solid ${color}; font-size: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+                <div style="position: absolute; bottom: -10px; right: -10px; background: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--color-primary); font-size: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
                     ${emoji}
                 </div>
             </div>`,
@@ -107,7 +106,7 @@ const createMoodMarkerIcon = (mood: Mood) => {
 
     return L.divIcon({
         html: `<div style="position: relative; width: 70px; height: 70px;">
-            <div style="width: 70px; height: 70px; border-radius: 50%; background: ${color}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 32px;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--color-primary); border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 32px;">
                 ${emoji}
             </div>
         </div>`,
@@ -149,6 +148,11 @@ const requestGeolocation = async () => {
             updateMapLocation(position.lat, position.lng, true);
         } else {
             initMap(position.lat, position.lng, true);
+        }
+
+        await refetchMoods();
+        if (moods.value?.moods) {
+            displayMoodMarkers();
         }
     } catch (error) {
         if (error instanceof Error) {
@@ -227,9 +231,14 @@ const displayMoodMarkers = () => {
             icon,
         });
 
+        const ratingRounded = Math.round(mood.rating);
+        const emoji = ['😢', '😕', '😐', '🙂', '😄'][ratingRounded - 1] || '😐';
+
         const popupContent = `
             <div style="padding: 8px; min-width: 200px;">
-                <p style="margin: 0 0 8px 0; font-weight: 600;">${mood.email}</p>
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    ${emoji} Note: ${mood.rating.toFixed(2)}/5
+                </p>
                 <p style="margin: 0 0 8px 0;">${mood.textContent}</p>
                 <p style="margin: 0; color: #666; font-size: 12px;">
                     ${new Date(mood.createdAt).toLocaleString('fr-FR')}

@@ -12,12 +12,10 @@ export interface CreateMoodPayload {
 }
 
 export interface Mood {
-    _id: string;
     textContent: string;
     rating: number;
     picture?: string;
     location: Location;
-    email: string;
     createdAt: string;
     updatedAt: string;
 }

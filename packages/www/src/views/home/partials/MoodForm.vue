@@ -69,16 +69,12 @@ const startCamera = async () => {
             isCameraActive.value = true;
             isLoading.value = false;
         } else {
-            toast.error(t('form.cameraError'));
             isLoading.value = false;
             stopCamera();
-            showDialog.value = false;
         }
     } catch (error) {
-        toast.error(t('form.cameraError'));
         isLoading.value = false;
         isCameraActive.value = false;
-        showDialog.value = false;
     }
 };
 
@@ -137,11 +133,6 @@ const handleSubmit = async () => {
         return;
     }
 
-    if (!capturedPhoto.value) {
-        toast.error(t('form.photoRequired'));
-        return;
-    }
-
     try {
         const position = await getCurrentPosition();
 
@@ -150,21 +141,36 @@ const handleSubmit = async () => {
             rating: rating.value,
             email: email.value,
             location: position,
-            picture: dataURLtoFile(capturedPhoto.value, 'mood-photo.png'),
+            picture: capturedPhoto.value
+                ? dataURLtoFile(capturedPhoto.value, 'mood-photo.png')
+                : undefined,
         };
 
         await createMood(payload);
         toast.success(t('form.success'));
         closeForm();
-    } catch (error) {
-        toast.error(t('form.error'));
+    } catch (error: any) {
+        if (error instanceof GeolocationPositionError) {
+            if (error.code === error.PERMISSION_DENIED) {
+                toast.error(t('form.geolocationDenied'));
+            } else if (error.code === error.TIMEOUT) {
+                toast.error(t('form.geolocationTimeout'));
+            } else {
+                toast.error(t('form.geolocationError'));
+            }
+        } else if (error?.message === 'Geolocation not supported') {
+            toast.error(t('form.geolocationNotSupported'));
+        } else if (error?.response?.status === 401) {
+            toast.error(t('form.rateLimitError'));
+        } else {
+            console.error('Error creating mood:', error);
+            toast.error(t('form.error'));
+        }
     }
 };
 
 watch(showDialog, (newVal) => {
-    if (newVal && !capturedPhoto.value) {
-        startCamera();
-    } else if (!newVal) {
+    if (!newVal) {
         stopCamera();
         capturedPhoto.value = null;
     }
@@ -198,6 +204,20 @@ defineExpose({ openForm });
                     <div v-if="isLoading" class="mood-form__camera-loading">
                         <LoadingSpinner />
                         <p>{{ t('form.cameraLoading') }}</p>
+                    </div>
+
+                    <div
+                        v-if="!isCameraActive && !capturedPhoto && !isLoading"
+                        class="mood-form__camera-prompt"
+                    >
+                        <p>{{ t('form.photoOptional') }}</p>
+                        <Button
+                            type="button"
+                            :label="t('form.startCamera')"
+                            icon="pi pi-camera"
+                            @click="startCamera"
+                            severity="secondary"
+                        />
                     </div>
 
                     <div
@@ -325,6 +345,20 @@ defineExpose({ openForm });
         }
     }
 
+    &__camera-prompt {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--scale-4r);
+        padding: var(--scale-8r);
+
+        p {
+            margin: 0;
+            color: var(--color-description);
+            font-style: italic;
+        }
+    }
+
     &__camera-container {
         width: 100%;
         display: flex;
@@ -404,12 +438,19 @@ defineExpose({ openForm });
             "photoRequired": "Veuillez prendre une photo",
             "success": "Mood ajouté avec succès !",
             "error": "Erreur lors de l'ajout du mood",
+            "rateLimitError": "Vous avez déjà ajouté un mood dans la dernière heure. Veuillez réessayer plus tard.",
             "photoPreview": "Aperçu de la photo",
             "takePhoto": "Prendre la photo",
             "retakePhoto": "Reprendre",
+            "startCamera": "Activer la caméra",
+            "photoOptional": "Photo optionnelle",
             "cameraLoading": "Chargement de la caméra...",
             "cameraError": "Impossible d'accéder à la caméra",
-            "photoTaken": "Photo capturée avec succès !"
+            "photoTaken": "Photo capturée avec succès !",
+            "geolocationDenied": "Accès à la géolocalisation refusé. Veuillez autoriser l'accès pour continuer.",
+            "geolocationTimeout": "La géolocalisation a pris trop de temps. Veuillez réessayer.",
+            "geolocationError": "Impossible d'obtenir votre position. Veuillez réessayer.",
+            "geolocationNotSupported": "La géolocalisation n'est pas supportée par votre navigateur."
         }
     }
 }
