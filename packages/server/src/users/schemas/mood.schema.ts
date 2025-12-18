@@ -1,30 +1,32 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { MinioFile } from '../../minio/minio-file.schema'
-import { Location, LocationSchema } from './location.schema'
-import { Weather, WeatherSchema } from './weather.schema'
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { MinioFile } from "../../minio/minio-file.schema";
+import { Location, LocationSchema } from "./location.schema";
+import { Weather, WeatherSchema } from "./weather.schema";
 
-@Schema({ timestamps: true, _id: true })
+export type MoodDocument = Mood & Document;
+
+@Schema({ timestamps: true, _id: false })
 export class Mood {
   @Prop({ required: true, maxlength: 1000, trim: true })
-  textContent: string
+  textContent: string;
 
   @Prop({ required: true, min: 1, max: 5 })
-  rating: number
+  rating: number;
 
   @Prop({ type: LocationSchema, required: true })
-  location: Location
+  location: Location;
 
   @Prop({ type: WeatherSchema, required: true })
-  weather: Weather
+  weather: Weather;
 
   @Prop({ type: Object, required: false })
-  picture?: MinioFile
+  picture?: MinioFile;
 
   @Prop()
-  createdAt?: Date
+  createdAt?: Date;
 
   @Prop()
-  updatedAt?: Date
+  updatedAt?: Date;
 }
 
-export const MoodSchema = SchemaFactory.createForClass(Mood)
+export const MoodSchema = SchemaFactory.createForClass(Mood);
