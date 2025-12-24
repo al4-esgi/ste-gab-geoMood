@@ -26,8 +26,9 @@ import { MongoMemoryModule, MongoMemoryService } from '../setup/mongodb-memory-s
       isGlobal: true,
       envFilePath: ['.env.development', '.env'],
     }),
-    MoodsModule,
     UsersModule,
+    MoodsModule,
   ],
+  exports: [MoodsModule, UsersModule],
 })
 export class TestModule {}

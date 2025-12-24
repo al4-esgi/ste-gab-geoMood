@@ -3,12 +3,12 @@ import { HttpService } from '@nestjs/axios'
 import { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MemoryStoredFile } from 'nestjs-form-data'
-import { WeatherConfig } from 'src/_utils/config/env.config'
-import { Mood, MoodDocument } from 'src/users/schemas/mood.schema'
-import { UserDocument } from 'src/users/schemas/user.schema'
-import { UsersService } from 'src/users/users.service'
+import { WeatherConfig } from '../_utils/config/env.config'
 import { IMoodService } from '../_utils/interfaces/mood-service.interface'
 import { AnalysisRating, MoodRating } from '../_utils/types/mood-rating'
+import { Mood, MoodDocument } from '../users/schemas/mood.schema'
+import { UserDocument } from '../users/schemas/user.schema'
+import { UsersService } from '../users/users.service'
 import {
   GEMINI_PRO_MODEL_TOKEN,
   GEMINI_PROMPT,
