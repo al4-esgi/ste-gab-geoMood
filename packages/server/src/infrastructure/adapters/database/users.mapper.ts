@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { UserEntity } from "./entities/users.entity";
-import { UserDocument } from "../infrastructure/adapters/database/schemas/user.schema";
-import { MoodsMapper } from "src/infrastructure/adapters/database/moods.mapper";
+import { Injectable } from '@nestjs/common'
+import { UserEntity } from '../../../domain/entities/users.entity'
+import { UserDocument } from './schemas/user.schema'
+import { MoodsMapper } from './moods.mapper'
 
 @Injectable()
 export class UsersMapper {
@@ -14,6 +14,6 @@ export class UsersMapper {
       createdAt: userDoc.createdAt,
       updatedAt: userDoc.updatedAt,
       moods: userDoc.moods.map((moodDoc) => this.moodsMapper.toDomain(moodDoc)),
-    });
+    })
   }
 }
