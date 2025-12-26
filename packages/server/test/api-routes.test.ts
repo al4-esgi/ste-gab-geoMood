@@ -4,8 +4,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { UsersRepository } from '../src/application/users/users/users.repository'
 import { MoodsService } from '../src/moods/moods.service'
-import { UsersRepository } from '../src/users/users.repository'
 import { TestModule } from './mocks/test.module'
 
 /*

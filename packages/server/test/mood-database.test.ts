@@ -2,8 +2,8 @@ import { Test } from '@nestjs/testing'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { UserDocument } from '../src/users/schemas/user.schema'
-import { UsersRepository } from '../src/users/users.repository'
+import { UsersRepository } from '../src/application/users/users/users.repository'
+import { UserDocument } from '../src/infrastructure/adapters/database/schemas/user.schema'
 import { TestModule } from './mocks/test.module'
 
 describe('Mood Database Storage', () => {
