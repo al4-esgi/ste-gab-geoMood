@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test -w @geomood/server",
+    "test": "cd packages/server && npx vitest",
     "dev": "npm run dev --workspaces --if-present",
     "dev:server": "npm run dev -w @geomood/server",
     "dev:www": "npm run dev -w @geomood/www",

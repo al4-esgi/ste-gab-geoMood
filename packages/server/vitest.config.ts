@@ -7,4 +7,5 @@ export default {
     include: ['**/*.spec.ts', '**/*test.ts'],
   },
   plugins: [swc.vite(), swc.rollup()],
+  reporters: ['verbose'],
 }

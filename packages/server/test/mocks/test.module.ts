@@ -1,29 +1,22 @@
-import { HttpModule } from "@nestjs/axios";
-import { Global, Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { MongooseModule } from "@nestjs/mongoose";
-import { MemoryStoredFile, NestjsFormDataModule } from "nestjs-form-data";
-import {
-  EnvironmentVariables,
-  validateEnv,
-} from "../../src/_utils/config/env.config";
-import { MoodsModule } from "../../src/moods/moods.module";
-import { UsersModule } from "../../src/users/users.module";
-import { MoodsService } from "src/moods/moods.service";
-import { UsersService } from "src/users/users.service";
-import { moodsProviders } from "../../src/moods/moods.provider";
+import { HttpModule } from '@nestjs/axios'
+import { Global, Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { MongooseModule } from '@nestjs/mongoose'
+import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data'
+import { validateEnv } from '../../src/_utils/config/env.config'
+import { MoodsModule } from '../../src/moods/moods.module'
+import { UsersModule } from '../../src/users/users.module'
+import { MongoMemoryModule, MongoMemoryService } from '../setup/mongodb-memory-server'
 
 @Global()
 @Module({
   imports: [
+    MongoMemoryModule,
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (
-        configService: ConfigService<EnvironmentVariables, true>
-      ) => ({
-        uri: configService.get("DATABASE").DATABASE_URL,
-        dbName: configService.get("DATABASE").DATABASE_NAME,
+      imports: [MongoMemoryModule],
+      inject: [MongoMemoryService],
+      useFactory: async (mongoMemory: MongoMemoryService) => ({
+        uri: await mongoMemory.start(),
       }),
     }),
     NestjsFormDataModule.config({ isGlobal: true, storage: MemoryStoredFile }),
@@ -31,11 +24,11 @@ import { moodsProviders } from "../../src/moods/moods.provider";
     ConfigModule.forRoot({
       validate: validateEnv,
       isGlobal: true,
-      envFilePath: [".env.development", ".env"],
+      envFilePath: ['.env.development', '.env'],
     }),
-    MoodsModule,
     UsersModule,
+    MoodsModule,
   ],
-  providers: [MoodsService, ...moodsProviders, UsersService],
+  exports: [MoodsModule, UsersModule],
 })
 export class TestModule {}
