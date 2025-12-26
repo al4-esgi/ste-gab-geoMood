@@ -1,4 +1,4 @@
-import { MoodEntity } from '../../domain/mood.entity'
+import { MoodEntity } from '../../domain/entities/mood.entity'
 import { ICreateMoodInputDto } from './create-mood-input.dto'
 
 export interface ICreateMoodUseCase {

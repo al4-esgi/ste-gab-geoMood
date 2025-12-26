@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { Mood } from './schemas/mood.schema'
 import { User, UserDocument } from './schemas/user.schema'
-import { UserEntity } from 'src/domain/users.entity'
+import { UserEntity } from 'src/domain/entities/users.entity'
 
 @Injectable()
 export class UsersRepository {
@@ -27,6 +27,18 @@ export class UsersRepository {
     }
 
     return user
+  }
+
+  async save(user: UserEntity): Promise<void> {
+    await this.userModel.findByIdAndUpdate(
+      user.id,
+      {
+        email: user.email,
+        moods: user.moods,
+        updatedAt: new Date(),
+      },
+      { new: true }
+    ).exec()
   }
 
   async addMoodToUser(userId: string, mood: Mood): Promise<UserDocument | null> {

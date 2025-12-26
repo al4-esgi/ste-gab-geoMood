@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { WeatherApiResponseDto } from '../../../application/moods/_utils/dto/response/weather-api-response.dto'
 import { WeatherConfig } from '../../../application/users/_utils/config/env.config'
-import { WeatherEntity } from '../../../domain/weather.entity'
+import { WeatherEntity } from '../../../domain/entities/weather.entity'
 import { WeatherMapper } from '../../../domain/weather.mapper'
 import { IWeatherPort } from '../../../ports/out/weather.port'
 

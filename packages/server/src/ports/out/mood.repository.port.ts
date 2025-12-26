@@ -1,4 +1,4 @@
-import { MoodEntity } from '../../domain/mood.entity'
+import { MoodEntity } from '../../domain/entities/mood.entity'
 import { RepositoryPort } from '../../shared/ports/repository.port'
 
 export interface MoodRepositoryPort extends RepositoryPort<MoodEntity> {

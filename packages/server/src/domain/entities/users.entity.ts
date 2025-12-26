@@ -9,11 +9,11 @@ export interface CreateUserProps {
 }
 
 export class UserEntity {
-  id: string;
-  email: string;
-  moods: MoodEntity[];
-  createdAt?: Date;
-  updatedAt?: Date;
+  public readonly id: string;
+  public readonly email: string;
+  public readonly moods: MoodEntity[];
+  public readonly createdAt?: Date;
+  public readonly updatedAt?: Date;
 
   constructor(createUserProps: CreateUserProps) {
     this.id = createUserProps.id;

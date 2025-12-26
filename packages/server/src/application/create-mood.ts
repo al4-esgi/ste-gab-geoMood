@@ -3,21 +3,20 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { MoodEntity } from "../domain/mood.entity";
+import { MoodEntity } from "../domain/entities/mood.entity";
 import { ICreateMoodInputDto } from "../ports/in/create-mood-input.dto";
 import { ICreateMoodUseCase } from "../ports/in/create-mood.usecase";
 import { ISentimentAnalyzerPort } from "../ports/out/sentiment-analyzer.port";
 import { UserRepositoryPort as IUserRepositoryPort } from "../ports/out/users.repository.port";
 import { IWeatherPort } from "../ports/out/weather.port";
-import { MoodsMapper } from "src/infrastructure/adapters/database/moods.mapper";
+import { MoodRating, AnalysisRating } from "../domain/value-objects/mood-rating";
 
 @Injectable()
 export class CreateMood implements ICreateMoodUseCase {
   constructor(
     private readonly SentimentAnalyzerAdapter: ISentimentAnalyzerPort,
     private readonly weatherAdapter: IWeatherPort,
-    private readonly userRepository: IUserRepositoryPort,
-    private readonly moodsMapper: MoodsMapper
+    private readonly userRepository: IUserRepositoryPort
   ) {}
 
   async createMood(body: ICreateMoodInputDto): Promise<MoodEntity> {
@@ -43,7 +42,7 @@ export class CreateMood implements ICreateMoodUseCase {
         )
       : undefined;
 
-    const moodRating = this.createMoodScore(
+    const moodRating = new MoodRating(
       textSentimentRating as AnalysisRating,
       body.rating as AnalysisRating,
       weatherRating,
@@ -79,19 +78,16 @@ export class CreateMood implements ICreateMoodUseCase {
         windSpeed: weather.windSpeed,
         pressure: weather.pressure,
       },
+      picture: body.picture
+        ? `data:${body.picture.mimeType};base64,${body.picture.buffer.toString("base64")}`
+        : undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
-    if (body.picture) {
-      mood.picture = `data:${body.picture.mimeType};base64,${body.picture.buffer.toString("base64")}`;
-    }
-
     user.addMood(mood);
-    const mappedMood = this.moodsMapper.toPersistence(mood);
-    await this.userRepository.addMoodToUser(user.id, mappedMood);
-    const addedMood = user.moods[user.moods.length - 1];
+    await this.userRepository.save(user);
 
-    return addedMood;
+    return mood;
   }
 }

@@ -1,7 +1,7 @@
 import { MemoryStoredFile } from 'nestjs-form-data'
 import { LocationDto } from '../../../moods/_utils/dto/request/location.dto'
 import { WeatherApiResponseDto } from '../../../moods/_utils/dto/response/weather-api-response.dto'
-import { AnalysisRating, MoodRating } from '../types/mood-rating'
+import { AnalysisRating, MoodRating } from '../../../../domain/value-objects/mood-rating'
 import { MoodDocument } from '../../../../infrastructure/adapters/database/schemas/mood.schema'
 import { UserDocument } from '../../../../infrastructure/adapters/database/schemas/user.schema'
 

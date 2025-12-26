@@ -1,4 +1,4 @@
-import { MoodEntity } from "src/domain/mood.entity";
+import { MoodEntity } from "src/domain/entities/mood.entity";
 import { Mood } from "./schemas/mood.schema";
 
 export class MoodsMapper {

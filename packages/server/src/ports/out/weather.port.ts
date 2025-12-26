@@ -1,5 +1,5 @@
-import { WeatherEntity } from "../../domain/weather.entity";
+import { WeatherEntity } from "../../domain/entities/weather.entity";
 
 export interface IWeatherPort {
-	getWeather(lat : number, long: number) : Promise<WeatherEntity>
+  getWeather(lat: number, long: number): Promise<WeatherEntity>;
 }
