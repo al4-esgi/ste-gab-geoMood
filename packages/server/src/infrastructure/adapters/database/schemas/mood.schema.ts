@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Location, LocationSchema } from "./location.schema";
 import { Weather, WeatherSchema } from "./weather.schema";
+import { HydratedDocument } from "mongoose";
 
-export type MoodDocument = Mood & Document;
+export type MoodDocument = HydratedDocument<Mood>;
 
 @Schema({ timestamps: true, _id: false })
 export class Mood {

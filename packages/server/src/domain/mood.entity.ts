@@ -1,3 +1,5 @@
+import { Location } from "src/infrastructure/adapters/database/schemas/location.schema"
+
 export interface CreateMoodProps {
   textContent: string
   rating: number
