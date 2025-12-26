@@ -1,9 +1,9 @@
-import { MoodEntity } from "src/domain/entities/mood.entity";
+import { MoodVO } from "src/domain/value-objects/mood.vo";
 import { Mood } from "./schemas/mood.schema";
 
 export class MoodsMapper {
-  toDomain(moodDoc: Mood): MoodEntity {
-    return new MoodEntity({
+  toDomain(moodDoc: Mood): MoodVO {
+    return new MoodVO({
       textContent: moodDoc.textContent,
       rating: moodDoc.rating,
       location: moodDoc.location,
@@ -14,15 +14,15 @@ export class MoodsMapper {
     });
   }
 
-  toPersistence(moodEntity: MoodEntity): Mood {
+  toPersistence(moodVO: MoodVO): Mood {
     return {
-      textContent: moodEntity["textContent"],
-      rating: moodEntity["rating"],
-      location: moodEntity["location"],
-      weather: moodEntity["weather"],
-      picture: moodEntity["picture"],
-      createdAt: moodEntity["createdAt"] || new Date(),
-      updatedAt: moodEntity["updatedAt"] || new Date(),
+      textContent: moodVO["textContent"],
+      rating: moodVO["rating"],
+      location: moodVO["location"],
+      weather: moodVO["weather"],
+      picture: moodVO["picture"],
+      createdAt: moodVO["createdAt"] || new Date(),
+      updatedAt: moodVO["updatedAt"] || new Date(),
     };
   }
 }

@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { WeatherApiResponseDto } from '../../../application/moods/_utils/dto/response/weather-api-response.dto'
 import { WeatherConfig } from '../../../application/users/_utils/config/env.config'
-import { WeatherEntity } from '../../../domain/entities/weather.entity'
+import { WeatherVO } from '../../../domain/value-objects/weather.vo'
 import { WeatherMapper } from '../../../domain/weather.mapper'
 import { IWeatherPort } from '../../../ports/out/weather.port'
 
@@ -26,10 +26,10 @@ export class WeatherAdapater implements IWeatherPort {
   }
 
   async handleApiFailure() {
-    return new WeatherEntity(new WeatherApiResponseDto())
+    return new WeatherVO(new WeatherApiResponseDto())
   }
 
-  async getWeather(lat: number, lon: number): Promise<WeatherEntity> {
+  async getWeather(lat: number, lon: number): Promise<WeatherVO> {
     try {
       const result = await this.fetchWeatherData(lat, lon)
       return this.weatherMapper.toDomain(result)

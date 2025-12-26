@@ -1,7 +1,7 @@
 import { WeatherApiResponseDto } from "src/application/moods/_utils/dto/response/weather-api-response.dto";
-import { AnalysisRating } from "../value-objects/mood-rating.vo";
+import { AnalysisRating } from "./mood-rating.vo";
 
-export class WeatherEntity {
+export class WeatherVO {
   public readonly data: WeatherApiResponseDto;
   public readonly condition: string;
   public readonly temperature: number;

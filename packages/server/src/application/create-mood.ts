@@ -3,7 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { MoodEntity } from "../domain/entities/mood.entity";
+import { MoodVO } from "../domain/value-objects/mood.vo";
 import { ICreateMoodInputDto } from "../ports/in/create-mood-input.dto";
 import { ICreateMoodUseCase } from "../ports/in/create-mood.usecase";
 import { ISentimentAnalyzerPort } from "../ports/out/sentiment-analyzer.port";
@@ -22,7 +22,7 @@ export class CreateMood implements ICreateMoodUseCase {
     private readonly userRepository: IUserRepositoryPort
   ) {}
 
-  async createMood(body: ICreateMoodInputDto): Promise<MoodEntity> {
+  async createMood(body: ICreateMoodInputDto): Promise<MoodVO> {
     const user = await this.userRepository.findUserByEmail(body.email);
     if (!user) {
       throw new NotFoundException("User not found");
@@ -52,7 +52,7 @@ export class CreateMood implements ICreateMoodUseCase {
       pictureSentimentRating as AnalysisRating
     );
 
-    const mood = new MoodEntity({
+    const mood = new MoodVO({
       textContent: body.textContent,
       rating: moodRating.total,
       location: {

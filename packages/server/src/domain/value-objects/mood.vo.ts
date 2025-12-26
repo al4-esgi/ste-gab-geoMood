@@ -10,7 +10,7 @@ export interface CreateMoodProps {
   updatedAt?: Date
 }
 
-export class MoodEntity {
+export class MoodVO {
   public readonly textContent: string
   public readonly rating: number
   public readonly location: Location

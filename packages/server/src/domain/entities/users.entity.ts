@@ -1,9 +1,9 @@
-import { MoodEntity } from "./mood.entity";
+import { MoodVO } from "../value-objects/mood.vo";
 
 export interface CreateUserProps {
   id: string;
   email: string;
-  moods: MoodEntity[];
+  moods: MoodVO[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -11,7 +11,7 @@ export interface CreateUserProps {
 export class UserEntity {
   public readonly id: string;
   public readonly email: string;
-  public readonly moods: MoodEntity[];
+  public readonly moods: MoodVO[];
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
 
@@ -31,7 +31,7 @@ export class UserEntity {
     );
   }
 
-  addMood(mood: MoodEntity): void {
+  addMood(mood: MoodVO): void {
     this.moods.push(mood);
   }
 }
