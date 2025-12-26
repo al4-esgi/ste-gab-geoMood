@@ -1,15 +1,15 @@
 import { MemoryStoredFile } from 'nestjs-form-data'
-import { LocationDto } from 'src/moods/_utils/dto/request/location.dto'
-import { WeatherApiResponseDto } from 'src/moods/_utils/dto/response/weather-api-response.dto'
+import { LocationDto } from '../../../moods/_utils/dto/request/location.dto'
+import { WeatherApiResponseDto } from '../../../moods/_utils/dto/response/weather-api-response.dto'
 import { AnalysisRating, MoodRating } from '../types/mood-rating'
-import { MoodDocument } from 'src/users/schemas/mood.schema';
-import { UserDocument } from 'src/users/schemas/user.schema';
+import { MoodDocument } from '../../../../infrastructure/adapters/database/schemas/mood.schema'
+import { UserDocument } from '../../../../infrastructure/adapters/database/schemas/user.schema'
 
 export interface ICreateMoodInputDto {
-  textContent: string;
-  rating: number;
-  picture?: MemoryStoredFile;
-  location: LocationDto;
+  textContent: string
+  rating: number
+  picture?: MemoryStoredFile
+  location: LocationDto
 }
 
 export interface IMoodService {
@@ -23,8 +23,8 @@ export interface IMoodService {
     userSentimentAnalysis: AnalysisRating,
     ratingUserNumberInput: AnalysisRating,
     ratingWeather: AnalysisRating,
-    ratingPhotoAnalysis?: AnalysisRating
-  ): MoodRating;
-  createMood(body: ICreateMoodInputDto): Promise<MoodDocument>;
-  getTodaysMoods(): Promise<UserDocument[]>;
+    ratingPhotoAnalysis?: AnalysisRating,
+  ): MoodRating
+  createMood(body: ICreateMoodInputDto): Promise<MoodDocument>
+  getTodaysMoods(): Promise<UserDocument[]>
 }

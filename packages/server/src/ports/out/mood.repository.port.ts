@@ -1,3 +1,6 @@
+import { MoodEntity } from '../../domain/mood.entity'
+import { RepositoryPort } from '../../shared/ports/repository.port'
+
 export interface MoodRepositoryPort extends RepositoryPort<MoodEntity> {
   deleteMood(userId: string, moodId: string): Promise<MoodEntity | null>
   getMoodsByDateRange(startDate: Date, endDate: Date): Promise<MoodEntity[]>

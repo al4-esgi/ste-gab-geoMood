@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { WeatherApiResponseDto } from '../../backup/moods copy/_utils/dto/response/weather-api-response.dto'
+import { WeatherApiResponseDto } from '../application/moods/_utils/dto/response/weather-api-response.dto'
 import { WeatherEntity } from './weather.entity'
 
 @Injectable()

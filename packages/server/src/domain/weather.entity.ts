@@ -1,4 +1,4 @@
-import { WeatherApiResponseDto } from '../../backup/moods copy/_utils/dto/response/weather-api-response.dto'
+import { WeatherApiResponseDto } from '../application/moods/_utils/dto/response/weather-api-response.dto'
 import { AnalysisRating } from '../application/users/_utils/types/mood-rating'
 
 export class WeatherEntity {

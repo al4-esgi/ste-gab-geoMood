@@ -1,6 +1,6 @@
 import { HttpModule } from '@nestjs/axios'
 import { Module } from '@nestjs/common'
-import { moodsProviders } from '../../../backup/moods copy/moods.provider'
+import { moodsProviders } from '../../infrastructure/adapters/gemini/gemini.provider'
 import { GeminiAdapter } from '../../infrastructure/adapters/gemini/gemini.adapter'
 import { WeatherAdapater } from '../../infrastructure/adapters/weather/weather.adapter'
 import { MoodsController } from '../../infrastructure/controllers/moods.controller'

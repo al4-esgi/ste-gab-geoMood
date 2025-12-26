@@ -9,16 +9,16 @@ import {
   GEMINI_VISION_PROMPT,
   NEGATIVE_KEYWORDS,
   POSITIVE_KEYWORDS,
-} from './_utils/constants'
-import { CreateMoodDto } from './_utils/dto/request/create-mood.dto'
-import { WeatherApiResponseDto } from './_utils/dto/response/weather-api-response.dto'
-import { decodeLlmResponse } from './_utils/schemas/llm-response.schema'
+} from './moods/_utils/constants'
+import { CreateMoodDto } from './moods/_utils/dto/request/create-mood.dto'
+import { WeatherApiResponseDto } from './moods/_utils/dto/response/weather-api-response.dto'
+import { decodeLlmResponse } from './moods/_utils/schemas/llm-response.schema'
 import { WeatherConfig } from './users/_utils/config/env.config'
 import { IMoodService } from './users/_utils/interfaces/mood-service.interface'
 import { AnalysisRating, MoodRating } from './users/_utils/types/mood-rating'
-import { Mood, MoodDocument } from './users/users/schemas/mood.schema'
-import { UserDocument } from './users/users/schemas/user.schema'
-import { UsersService } from './users/users/users.service'
+import { Mood, MoodDocument } from '../infrastructure/adapters/database/schemas/mood.schema'
+import { UserDocument } from '../infrastructure/adapters/database/schemas/user.schema'
+import { UsersService } from './users/users.service'
 
 @Injectable()
 export class MoodsService implements IMoodService {
