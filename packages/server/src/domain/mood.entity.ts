@@ -11,13 +11,13 @@ export interface CreateMoodProps {
 }
 
 export class MoodEntity {
-  private textContent: string
-  private rating: number
-  private location: Location
-  private weather: any // Weather
-  private picture?: string
-  private createdAt?: Date
-  private updatedAt?: Date
+  public readonly textContent: string
+  public readonly rating: number
+  public readonly location: Location
+  public readonly weather: any // Weather
+  public readonly picture?: string
+  public readonly createdAt?: Date
+  public readonly updatedAt?: Date
 
   constructor(createMoodProps: CreateMoodProps) {
     this.textContent = createMoodProps.textContent

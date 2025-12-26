@@ -6,7 +6,7 @@ import {
 import { MoodEntity } from "../domain/mood.entity";
 import { ICreateMoodInputDto } from "../ports/in/create-mood-input.dto";
 import { ICreateMoodUseCase } from "../ports/in/create-mood.usecase";
-import { IGeminiPort } from "../ports/out/gemini.port";
+import { ISentimentAnalyzerPort } from "../ports/out/sentiment-analyzer.port";
 import { UserRepositoryPort as IUserRepositoryPort } from "../ports/out/users.repository.port";
 import { IWeatherPort } from "../ports/out/weather.port";
 import { MoodsMapper } from "src/infrastructure/adapters/database/moods.mapper";
@@ -14,7 +14,7 @@ import { MoodsMapper } from "src/infrastructure/adapters/database/moods.mapper";
 @Injectable()
 export class CreateMood implements ICreateMoodUseCase {
   constructor(
-    private readonly geminiAdapter: IGeminiPort,
+    private readonly SentimentAnalyzerAdapter: ISentimentAnalyzerPort,
     private readonly weatherAdapter: IWeatherPort,
     private readonly userRepository: IUserRepositoryPort,
     private readonly moodsMapper: MoodsMapper
@@ -34,11 +34,13 @@ export class CreateMood implements ICreateMoodUseCase {
 
     const [weather, textSentimentRating] = await Promise.all([
       this.weatherAdapter.getWeather(body.location.lat, body.location.lng),
-      this.geminiAdapter.getTextSentimentAnalysis(body.textContent),
+      this.SentimentAnalyzerAdapter.getTextSentimentAnalysis(body.textContent),
     ]);
     const weatherRating = weather.getAnalysisRatingFromWeather();
     const pictureSentimentRating = body.picture
-      ? await this.geminiAdapter.getPictureSentimentAnalysis(body.picture)
+      ? await this.SentimentAnalyzerAdapter.getPictureSentimentAnalysis(
+          body.picture
+        )
       : undefined;
 
     const moodRating = this.createMoodScore(

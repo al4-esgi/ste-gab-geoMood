@@ -1,11 +1,11 @@
-import { HttpModule } from '@nestjs/axios'
-import { Module } from '@nestjs/common'
-import { moodsProviders } from '../../infrastructure/adapters/gemini/gemini.provider'
-import { GeminiAdapter } from '../../infrastructure/adapters/gemini/gemini.adapter'
-import { WeatherAdapater } from '../../infrastructure/adapters/weather/weather.adapter'
-import { MoodsController } from '../../infrastructure/controllers/moods.controller'
-import { MoodsService } from '../moods.service'
-import { UsersModule } from '../users/users.module'
+import { HttpModule } from "@nestjs/axios";
+import { Module } from "@nestjs/common";
+import { moodsProviders } from "../../infrastructure/adapters/gemini/gemini.provider";
+import { SentimentAnalyzerAdapter } from "../../infrastructure/adapters/gemini/sentiment-analyzer.adapter";
+import { WeatherAdapater } from "../../infrastructure/adapters/weather/weather.adapter";
+import { MoodsController } from "../../infrastructure/controllers/moods.controller";
+import { MoodsService } from "../moods.service";
+import { UsersModule } from "../users/users.module";
 
 @Module({
   imports: [HttpModule, UsersModule],
@@ -14,11 +14,11 @@ import { UsersModule } from '../users/users.module'
     MoodsService,
     ...moodsProviders,
     {
-      provide: 'IGeminiPort',
-      useClass: GeminiAdapter,
+      provide: "ISentimentAnalyzerPort",
+      useClass: SentimentAnalyzerAdapter,
     },
     {
-      provide: 'IWeatherPort',
+      provide: "IWeatherPort",
       useClass: WeatherAdapater,
     },
   ],
