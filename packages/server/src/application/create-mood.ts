@@ -9,7 +9,10 @@ import { ICreateMoodUseCase } from "../ports/in/create-mood.usecase";
 import { ISentimentAnalyzerPort } from "../ports/out/sentiment-analyzer.port";
 import { UserRepositoryPort as IUserRepositoryPort } from "../ports/out/users.repository.port";
 import { IWeatherPort } from "../ports/out/weather.port";
-import { MoodRating, AnalysisRating } from "../domain/value-objects/mood-rating";
+import {
+  MoodRating,
+  AnalysisRating,
+} from "../domain/value-objects/mood-rating.vo";
 
 @Injectable()
 export class CreateMood implements ICreateMoodUseCase {
@@ -48,21 +51,6 @@ export class CreateMood implements ICreateMoodUseCase {
       weatherRating,
       pictureSentimentRating as AnalysisRating
     );
-
-    // const mood: Mood = {
-    //   textContent: body.textContent,
-    //   rating: moodRating.total,
-    //   location: body.location,
-    //   weather: {
-    //     condition: weatherData.current?.weather?.[0]?.main || 'Unknown',
-    //     temperature: weatherData.current ? weatherData.current.temp - 273.15 : 0,
-    //     humidity: weatherData.current ? weatherData.current.humidity : 0,
-    //     windSpeed: weatherData.current ? weatherData.current.wind_speed : 0,
-    //     pressure: weatherData.current ? weatherData.current.pressure : 0,
-    //   },
-    //   createdAt: new Date(),
-    //   updatedAt: new Date(),
-    // }
 
     const mood = new MoodEntity({
       textContent: body.textContent,
