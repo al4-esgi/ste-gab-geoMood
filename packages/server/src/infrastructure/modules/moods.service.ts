@@ -11,6 +11,11 @@ import { IWeatherPort } from '../../ports/out/weather.port'
 import { CreateMoodDto } from '../dto/request/create-mood.dto'
 import { WeatherApiResponseDto } from '../dto/response/weather-api-response.dto'
 
+/**
+ * @deprecated This service is kept for backwards compatibility with tests.
+ * New code should use CreateMoodUseCase and GetMoodsUseCase directly.
+ * Production code (controllers) should inject use cases, not this service.
+ */
 @Injectable()
 export class MoodsService {
   private readonly logger = new Logger(MoodsService.name)

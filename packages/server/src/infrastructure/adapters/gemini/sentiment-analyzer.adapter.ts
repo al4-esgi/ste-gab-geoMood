@@ -8,7 +8,7 @@ import {
   NEGATIVE_KEYWORDS,
   POSITIVE_KEYWORDS,
 } from '../../config/gemini.constants'
-import { decodeLlmResponse } from '../../schemas/llm-response.schema'
+import { decodeLlmResponse } from './llm-response.schema'
 import { ISentimentAnalyzerPort } from '../../../ports/out/sentiment-analyzer.port'
 
 @Injectable()
