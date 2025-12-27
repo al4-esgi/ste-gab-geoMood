@@ -2,25 +2,27 @@ import { HttpService } from '@nestjs/axios'
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MemoryStoredFile } from 'nestjs-form-data'
-import { CreateMoodDto } from 'src/application/moods/_utils/dto/request/create-mood.dto'
-import { WeatherApiResponseDto } from 'src/application/moods/_utils/dto/response/weather-api-response.dto'
-import { EnvironmentVariables, WeatherConfig } from 'src/application/users/_utils/config/env.config'
-import { IMoodService } from 'src/application/users/_utils/interfaces/mood-service.interface'
-import { UserDocument } from 'src/infrastructure/adapters/database/schemas/user.schema'
-import { Mood, MoodDocument } from 'src/users/schemas/mood.schema'
-import { AnalysisRating, MoodRating } from '../../src/application/users/_utils/types/mood-rating'
+import { CreateMoodDto } from '../../src/infrastructure/dto/request/create-mood.dto'
+import { WeatherApiResponseDto } from '../../src/infrastructure/dto/response/weather-api-response.dto'
+import { EnvironmentVariables, WeatherConfig } from '../../src/infrastructure/config/env.config'
+import { UsersService } from '../../src/infrastructure/modules/users.service'
+import { AnalysisRating, MoodRating } from '../../src/domain/value-objects/mood-rating.vo'
+import { MoodVO } from '../../src/domain/value-objects/mood.vo'
+import { Mood, MoodDocument } from '../../src/infrastructure/adapters/database/schemas/mood.schema'
+import { UserDocument } from '../../src/infrastructure/adapters/database/schemas/user.schema'
 
 @Injectable()
-export class MockMoodService implements IMoodService {
+export class MockMoodService {
   constructor(
     public readonly httpService: HttpService,
     public readonly configService: ConfigService<EnvironmentVariables, true>,
+    public readonly usersService: UsersService,
   ) {}
   getPictureSentimentAnalysis(pictureBuffer: MemoryStoredFile): Promise<number> {
     throw new Error('Method not implemented.')
   }
 
-  fetchWheatherData(lat: number, lng: number): Promise<any> {
+  fetchWheatherData(lat: number, lng: number): Promise<WeatherApiResponseDto> {
     throw new Error('Method not implemented.')
   }
 
@@ -41,7 +43,7 @@ export class MockMoodService implements IMoodService {
   async getWeather(lat: number, lon: number): Promise<WeatherApiResponseDto> {
     try {
       return await this.fetchWeatherData(lat, lon)
-    } catch (error) {
+    } catch {
       return this.handleApiFailure()
     }
   }
@@ -113,7 +115,7 @@ export class MockMoodService implements IMoodService {
       throw new Error('Weather rating must be between 0 and 5')
     }
 
-    if (ratingPhotoAnalysis < 0 || ratingPhotoAnalysis > 5) {
+    if (ratingPhotoAnalysis !== undefined && (ratingPhotoAnalysis < 0 || ratingPhotoAnalysis > 5)) {
       throw new Error('Photo rating must be between 0 and 5')
     }
 
@@ -126,7 +128,7 @@ export class MockMoodService implements IMoodService {
       throw new NotFoundException('User not found')
     }
 
-    const alreadyPosted = await this.usersService.checkDuplicateMoodInHour(user._id.toString())
+    const alreadyPosted = await user.checkDuplicateMoodInHour()
 
     if (alreadyPosted) {
       throw new UnauthorizedException('Mood already posted in the last hour')
@@ -160,14 +162,11 @@ export class MockMoodService implements IMoodService {
       updatedAt: new Date(),
     }
 
-    // if (body.picture) {
-    //   mood.picture = body.picture;
-    // }
-
-    const updatedUser = await this.usersService.addMoodToUser(user._id.toString(), mood)
+    const moodVO = new MoodVO(mood)
+    const updatedUser = await this.usersService.addMoodToUser(user.id, moodVO)
     const addedMood = updatedUser.moods[updatedUser.moods.length - 1]
 
-    return addedMood as MoodDocument
+    return addedMood as unknown as MoodDocument
   }
 
   async getTodaysMoods(): Promise<UserDocument[]> {
@@ -177,6 +176,6 @@ export class MockMoodService implements IMoodService {
     const endOfDay = new Date()
     endOfDay.setHours(23, 59, 59, 999)
 
-    return this.usersService.getMoodsByDateRange(startOfDay, endOfDay)
+    return this.usersService.getMoodsByDateRange(startOfDay, endOfDay) as unknown as Promise<UserDocument[]>
   }
 }

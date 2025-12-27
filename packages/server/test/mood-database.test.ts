@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing'
-import { readFileSync } from 'fs'
-import { join } from 'path'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { UsersRepository } from '../src/application/users/users/users.repository'
+import { UsersRepository } from '../src/infrastructure/adapters/database/users.repository'
 import { UserDocument } from '../src/infrastructure/adapters/database/schemas/user.schema'
 import { TestModule } from './mocks/test.module'
 
@@ -63,7 +63,7 @@ describe('Mood Database Storage', () => {
       const foundUser = await usersRepository.findUserByEmail(testUser.email)
 
       expect(foundUser).toBeDefined()
-      expect(foundUser!._id.toString()).toBe(testUser._id.toString())
+      expect(foundUser!.id).toBe(testUser._id.toString())
       expect(foundUser!.email).toBe(testUser.email)
     })
 

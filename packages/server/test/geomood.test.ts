@@ -2,9 +2,9 @@ import { Test } from '@nestjs/testing'
 import { validate } from 'class-validator'
 import { MemoryStoredFile } from 'nestjs-form-data'
 import { beforeAll, beforeEach, describe, expect, it, test } from 'vitest'
-import { CreateMoodDto } from '../src/application/moods/_utils/dto/request/create-mood.dto'
-import { LocationDto } from '../src/application/moods/_utils/dto/request/location.dto'
-import { MoodsService } from '../src/moods/moods.service'
+import { CreateMoodDto } from '../src/infrastructure/dto/request/create-mood.dto'
+import { LocationDto } from '../src/infrastructure/dto/request/location.dto'
+import { MoodsService } from '../src/infrastructure/modules/moods.service'
 import { TestModule } from './mocks/test.module'
 
 /*

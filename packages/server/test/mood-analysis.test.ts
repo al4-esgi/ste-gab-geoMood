@@ -3,12 +3,9 @@ import { MemoryStoredFile } from 'nestjs-form-data'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
-import {
-  CurrentWeatherDto,
-  WeatherApiResponseDto,
-} from '../src/application/moods/_utils/dto/response/weather-api-response.dto'
-import { AnalysisRating, MoodRating } from '../src/application/users/_utils/types/mood-rating'
-import { MoodsService } from '../src/moods/moods.service'
+import { CurrentWeatherDto, WeatherApiResponseDto } from '../src/infrastructure/dto/response/weather-api-response.dto'
+import { AnalysisRating, MoodRating } from '../src/domain/value-objects/mood-rating.vo'
+import { MoodsService } from '../src/infrastructure/modules/moods.service'
 import { TestModule } from './mocks/test.module'
 
 /*

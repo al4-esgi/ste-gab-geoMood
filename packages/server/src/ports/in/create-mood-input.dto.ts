@@ -1,5 +1,5 @@
 import { MemoryStoredFile } from 'nestjs-form-data'
-import { LocationDto } from '../../application/moods/_utils/dto/request/location.dto'
+import { LocationDto } from '../../infrastructure/dto/request/location.dto'
 
 export interface ICreateMoodInputDto {
   email: string

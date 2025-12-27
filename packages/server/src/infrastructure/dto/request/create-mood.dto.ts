@@ -3,7 +3,7 @@ import { Transform, Type, plainToInstance } from 'class-transformer'
 import { IsEmail, IsInt, IsNotEmpty, IsString, Max, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator'
 import { Optional } from 'class-validator-extended'
 import { HasMimeType, IsFile, MaxFileSize, MemoryStoredFile } from 'nestjs-form-data'
-import { ICreateMoodInputDto } from 'src/application/users/_utils/interfaces/mood-service.interface'
+import { ICreateMoodInputDto } from '../../interfaces/mood-service.interface'
 import { LocationDto } from './location.dto'
 
 export class CreateMoodDto implements ICreateMoodInputDto {

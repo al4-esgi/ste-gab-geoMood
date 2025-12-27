@@ -1,4 +1,4 @@
-import { Location } from "src/infrastructure/adapters/database/schemas/location.schema"
+import { Location } from './location.vo'
 
 export interface CreateMoodProps {
   textContent: string

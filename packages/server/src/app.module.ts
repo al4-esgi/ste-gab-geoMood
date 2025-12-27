@@ -5,9 +5,9 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { MoodsModule } from './application/moods/moods.module'
-import { type EnvironmentVariables, validateEnv } from './application/users/_utils/config/env.config'
-import { UsersModule } from './application/users/users.module'
+import { type EnvironmentVariables, validateEnv } from './infrastructure/config/env.config'
+import { MoodsModule } from './infrastructure/modules/moods.module'
+import { UsersModule } from './infrastructure/modules/users.module'
 
 @Module({
   imports: [

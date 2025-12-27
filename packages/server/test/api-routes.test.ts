@@ -1,11 +1,11 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import * as fs from 'fs'
-import * as path from 'path'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { UsersRepository } from '../src/application/users/users/users.repository'
-import { MoodsService } from '../src/moods/moods.service'
+import { UsersRepository } from '../src/infrastructure/adapters/database/users.repository'
+import { MoodsService } from '../src/infrastructure/modules/moods.service'
 import { TestModule } from './mocks/test.module'
 
 /*
@@ -56,7 +56,7 @@ describe('API Routes', { timeout: 30000 }, () => {
     vi.restoreAllMocks()
     const user = await usersRepository.findUserByEmail(testUserEmail)
     if (user) {
-      await usersRepository.deleteUser(user._id.toString())
+      await usersRepository.deleteUser(user.id)
     }
     await app.close()
   })

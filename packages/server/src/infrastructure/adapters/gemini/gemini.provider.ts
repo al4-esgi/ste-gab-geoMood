@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { Provider } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { GEMINI_CLIENT_TOKEN, GEMINI_PRO_MODEL_TOKEN } from '../../../application/moods/_utils/constants'
-import { GeminiConfig } from '../../../application/users/_utils/config/env.config'
+import { GEMINI_CLIENT_TOKEN, GEMINI_PRO_MODEL_TOKEN } from '../../config/gemini.constants'
+import { GeminiConfig } from '../../config/env.config'
 
 export const moodsProviders: Provider[] = [
   {
