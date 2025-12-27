@@ -1,28 +1,24 @@
 import { HttpService } from '@nestjs/axios'
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { MemoryStoredFile } from 'nestjs-form-data'
-import { CreateMoodDto } from '../../src/infrastructure/dto/request/create-mood.dto'
-import { WeatherApiResponseDto } from '../../src/infrastructure/dto/response/weather-api-response.dto'
-import { EnvironmentVariables, WeatherConfig } from '../../src/infrastructure/config/env.config'
-import { UsersService } from '../../src/infrastructure/modules/users.service'
+import { ImageData } from '../../src/domain/value-objects/image-data.vo'
 import { AnalysisRating, MoodRating } from '../../src/domain/value-objects/mood-rating.vo'
 import { MoodVO } from '../../src/domain/value-objects/mood.vo'
+import { UsersRepository } from '../../src/infrastructure/adapters/database/users.repository'
+import { EnvironmentVariables, WeatherConfig } from '../../src/infrastructure/config/env.config'
+import { CreateMoodDto } from '../../src/infrastructure/dto/request/create-mood.dto'
+import { WeatherApiResponseDto } from '../../src/infrastructure/dto/response/weather-api-response.dto'
 import { Mood, MoodDocument } from '../../src/infrastructure/adapters/database/schemas/mood.schema'
-import { UserDocument } from '../../src/infrastructure/adapters/database/schemas/user.schema'
 
 @Injectable()
 export class MockMoodService {
   constructor(
     public readonly httpService: HttpService,
     public readonly configService: ConfigService<EnvironmentVariables, true>,
-    public readonly usersService: UsersService,
+    public readonly usersRepository: UsersRepository,
   ) {}
-  getPictureSentimentAnalysis(pictureBuffer: MemoryStoredFile): Promise<number> {
-    throw new Error('Method not implemented.')
-  }
 
-  fetchWheatherData(lat: number, lng: number): Promise<WeatherApiResponseDto> {
+  getPictureSentimentAnalysis(picture: ImageData): Promise<number> {
     throw new Error('Method not implemented.')
   }
 
@@ -123,12 +119,12 @@ export class MockMoodService {
   }
 
   async createMood(body: CreateMoodDto): Promise<MoodDocument> {
-    const user = await this.usersService.findUserByEmail(body.email)
+    const user = await this.usersRepository.findUserByEmail(body.email)
     if (!user) {
       throw new NotFoundException('User not found')
     }
 
-    const alreadyPosted = await user.checkDuplicateMoodInHour()
+    const alreadyPosted = user.checkDuplicateMoodInHour()
 
     if (alreadyPosted) {
       throw new UnauthorizedException('Mood already posted in the last hour')
@@ -163,19 +159,19 @@ export class MockMoodService {
     }
 
     const moodVO = new MoodVO(mood)
-    const updatedUser = await this.usersService.addMoodToUser(user.id, moodVO)
-    const addedMood = updatedUser.moods[updatedUser.moods.length - 1]
+    const updatedUser = await this.usersRepository.addMoodToUser(user.id, moodVO)
+    const addedMood = updatedUser!.moods[updatedUser!.moods.length - 1]
 
     return addedMood as unknown as MoodDocument
   }
 
-  async getTodaysMoods(): Promise<UserDocument[]> {
+  async getTodaysMoods(): Promise<any[]> {
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
 
     const endOfDay = new Date()
     endOfDay.setHours(23, 59, 59, 999)
 
-    return this.usersService.getMoodsByDateRange(startOfDay, endOfDay) as unknown as Promise<UserDocument[]>
+    return this.usersRepository.getMoodsByDateRange(startOfDay, endOfDay)
   }
 }

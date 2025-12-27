@@ -4,22 +4,11 @@ import { MemoryStoredFile } from 'nestjs-form-data'
 import { beforeAll, beforeEach, describe, expect, it, test } from 'vitest'
 import { CreateMoodDto } from '../src/infrastructure/dto/request/create-mood.dto'
 import { LocationDto } from '../src/infrastructure/dto/request/location.dto'
-import { MoodsService } from '../src/infrastructure/modules/moods.service'
+import { IWeatherPort } from '../src/ports/out/weather.port'
 import { TestModule } from './mocks/test.module'
 
-/*
-### 1. Data Collection
-
-- Free text input, mood rating (1-5), and optional image
-- Automatic location retrieval (Google Maps / Geocoding / Places API)
-- Automatic weather retrieval (OpenWeatherMap or equivalent)
-- Local storage (JSON, SQLite, or lightweight database)
-
-💡 If an API is unavailable, simulate data to ensure project continuity.
-*/
-
 describe('Mood Service', () => {
-  let moodService: MoodsService
+  let weatherAdapter: IWeatherPort
   const mockCreateMoodDto = new CreateMoodDto()
   const mockLocationDto = new LocationDto()
 
@@ -27,7 +16,7 @@ describe('Mood Service', () => {
     const module = await Test.createTestingModule({
       imports: [TestModule],
     }).compile()
-    moodService = module.get(MoodsService)
+    weatherAdapter = module.get<IWeatherPort>('IWeatherPort')
   })
 
   beforeEach(async () => {
@@ -47,7 +36,7 @@ describe('Mood Service', () => {
   })
 
   it('should be defined', () => {
-    expect(moodService).toBeDefined()
+    expect(weatherAdapter).toBeDefined()
   })
 
   describe('User Input Validation', () => {
@@ -139,10 +128,10 @@ describe('Mood Service', () => {
 
   describe('Weather Services', () => {
     test('should fetch weather data for coordinates', async () => {
-      await expect(moodService.fetchWeatherData(43.296398, 5.37)).resolves.toBeDefined()
+      await expect(weatherAdapter.fetchWeatherData(43.296398, 5.37)).resolves.toBeDefined()
     })
     test('should handle weather API failure', async () => {
-      expect(moodService.handleApiFailure()).toBeDefined()
+      expect(weatherAdapter.handleApiFailure()).toBeDefined()
     })
   })
 })

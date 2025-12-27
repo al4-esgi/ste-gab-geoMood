@@ -1,11 +1,11 @@
 import { HttpService } from '@nestjs/axios'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { WeatherApiResponseDto } from '../../dto/response/weather-api-response.dto'
-import { WeatherConfig } from '../../config/env.config'
 import { WeatherVO } from '../../../domain/value-objects/weather.vo'
-import { WeatherMapper } from './weather.mapper'
+import { WeatherConfig } from '../../config/env.config'
+import { WeatherApiResponseDto } from '../../dto/response/weather-api-response.dto'
 import { IWeatherPort } from '../../../ports/out/weather.port'
+import { WeatherMapper } from './weather.mapper'
 
 @Injectable()
 export class WeatherAdapater implements IWeatherPort {
@@ -25,15 +25,21 @@ export class WeatherAdapater implements IWeatherPort {
     return result.data
   }
 
-  async handleApiFailure() {
-    return new WeatherVO(new WeatherApiResponseDto())
+  async handleApiFailure(): Promise<WeatherVO> {
+    return new WeatherVO({
+      condition: 'Unknown',
+      temperature: 0,
+      humidity: 0,
+      windSpeed: 0,
+      pressure: 0,
+    })
   }
 
   async getWeather(lat: number, lon: number): Promise<WeatherVO> {
     try {
       const result = await this.fetchWeatherData(lat, lon)
       return this.weatherMapper.toDomain(result)
-    } catch (error) {
+    } catch {
       return this.handleApiFailure()
     }
   }

@@ -1,6 +1,7 @@
 import { GenerativeModel } from '@google/generative-ai'
 import { Inject, Injectable, Logger } from '@nestjs/common'
-import { MemoryStoredFile } from 'nestjs-form-data'
+import { ImageData } from '../../../domain/value-objects/image-data.vo'
+import { ISentimentAnalyzerPort } from '../../../ports/out/sentiment-analyzer.port'
 import {
   GEMINI_PRO_MODEL_TOKEN,
   GEMINI_PROMPT,
@@ -9,7 +10,6 @@ import {
   POSITIVE_KEYWORDS,
 } from '../../config/gemini.constants'
 import { decodeLlmResponse } from './llm-response.schema'
-import { ISentimentAnalyzerPort } from '../../../ports/out/sentiment-analyzer.port'
 
 @Injectable()
 export class SentimentAnalyzerAdapter implements ISentimentAnalyzerPort {
@@ -33,7 +33,7 @@ export class SentimentAnalyzerAdapter implements ISentimentAnalyzerPort {
     }
   }
 
-  async getPictureSentimentAnalysis(picture: MemoryStoredFile): Promise<number> {
+  async getPictureSentimentAnalysis(picture: ImageData): Promise<number> {
     try {
       const result = await this.geminiModel.generateContent([
         GEMINI_VISION_PROMPT,
