@@ -10,6 +10,7 @@
 6. Implémentation de tests pour les appels à la base de données
 7. Implémentation de tests pour les routes REST
 8. Branchement du back-end et du front-end
+9. XP avec Steevy pour implementer l'architecture hexagonale
 
 ## Hoareau Steevy
 

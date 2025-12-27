@@ -67,16 +67,49 @@ export class UsersRepository implements UserRepositoryPort {
   }
 
   async getMoodsByDateRange(startDate: Date, endDate: Date): Promise<UserEntity[]> {
-    const users = await this.userModel
-      .find({
-        moods: {
-          $elemMatch: {
-            createdAt: { $gte: startDate, $lte: endDate },
-          },
-        },
-      })
-      .exec()
-    return users.map((u) => this.usersMapper.toDomain(u))
+    const users = await this.userModel.aggregate([
+      {
+        $match: {
+          moods: {
+            $elemMatch: {
+              createdAt: { $gte: startDate, $lte: endDate }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          moods: {
+            $filter: {
+              input: '$moods',
+              cond: {
+                $and: [
+                  { $gte: ['$$this.createdAt', startDate] },
+                  { $lte: ['$$this.createdAt', endDate] }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          moods: {
+            $slice: [
+              {
+                $sortArray: {
+                  input: '$moods',
+                  sortBy: { createdAt: -1 }
+                }
+              },
+              1
+            ]
+          }
+        }
+      }
+    ]).exec()
+
+    return users.map((u) => this.usersMapper.toDomain(u as any))
   }
 
   async getMoodById(userId: string, moodId: string): Promise<Mood | null> {

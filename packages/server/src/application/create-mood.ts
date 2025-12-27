@@ -68,7 +68,7 @@ export class CreateMoodUseCase implements ICreateMoodUseCase {
     })
 
     user.addMood(mood)
-    await this.userRepository.save(user)
+    await this.userRepository.addMoodToUser(user.id, mood)
 
     return mood
   }
