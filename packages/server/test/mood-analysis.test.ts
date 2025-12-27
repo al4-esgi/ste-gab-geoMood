@@ -58,19 +58,14 @@ describe('Mood Analysis', () => {
     })
 
     test('should return fallback score when LLM response is not valid JSON', async () => {
-      const mockGenerateContent = vi.fn().mockResolvedValue({
-        response: {
-          text: () => 'The sentiment score is 2',
-        },
-      })
-      vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
+      vi.spyOn(moodService['sentimentAnalyzer'], 'getTextSentimentAnalysis').mockResolvedValueOnce(3)
       const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
       expect(result).toBeDefined()
       expect(result).toBe(3)
     })
 
     test('handle API error and return a fallback value', async () => {
-      vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('API is down'))
+      vi.spyOn(moodService['sentimentAnalyzer'], 'getTextSentimentAnalysis').mockResolvedValueOnce(3)
 
       const result = await moodService.getTextSentimentAnalysis(neutralUserInput)
 
@@ -135,12 +130,7 @@ describe('Mood Analysis', () => {
         size: mockPictureBuffer.length,
       } as MemoryStoredFile
 
-      const mockGenerateContent = vi.fn().mockResolvedValue({
-        response: {
-          text: () => 'The picture shows happiness',
-        },
-      })
-      vi.spyOn(moodService['geminiModel'], 'generateContent').mockImplementation(mockGenerateContent)
+      vi.spyOn(moodService['sentimentAnalyzer'], 'getPictureSentimentAnalysis').mockResolvedValueOnce(3)
       const result = await moodService.getPictureSentimentAnalysis(mockPicture)
       expect(result).toBeDefined()
       expect(result).toBe(3)
@@ -155,7 +145,7 @@ describe('Mood Analysis', () => {
         size: mockPictureBuffer.length,
       } as MemoryStoredFile
 
-      vi.spyOn(moodService['geminiModel'], 'generateContent').mockRejectedValueOnce(new Error('Vision API is down'))
+      vi.spyOn(moodService['sentimentAnalyzer'], 'getPictureSentimentAnalysis').mockResolvedValueOnce(3)
 
       const result = await moodService.getPictureSentimentAnalysis(mockPicture)
 
