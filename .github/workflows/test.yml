@@ -34,4 +34,4 @@ jobs:
           DATABASE_NAME: $DATABASE_NAME
           PORT: $PORT
           NODE_ENV: $NODE_ENV
-          WHEATHER_API_KEY: ${{secrets.WHEATHER_API_KEY}}
+          WEATHER_API_KEY: ${{secrets.WEATHER_API_KEY}}

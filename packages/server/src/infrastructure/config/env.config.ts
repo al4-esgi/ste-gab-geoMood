@@ -18,7 +18,7 @@ export class DatabaseConfig {
 
 export class WeatherConfig {
   @IsString()
-  WHEATHER_API_KEY: string;
+  WEATHER_API_KEY: string;
 }
 
 export class GeminiConfig {
@@ -28,7 +28,7 @@ export class GeminiConfig {
 
 export class ServerConfig {
   @IsString()
-  PORT: string
+  PORT: string;
 
   @IsString()
   NODE_ENV: string;
@@ -37,7 +37,7 @@ export class ServerConfig {
 export class EnvironmentVariables {
   @ValidateNested()
   @Type(() => DatabaseConfig)
-  DATABASE: DatabaseConfig
+  DATABASE: DatabaseConfig;
 
   @ValidateNested()
   @Type(() => ServerConfig)
@@ -63,7 +63,7 @@ export function validateEnv(config: Record<string, unknown>) {
       NODE_ENV: config.NODE_ENV,
     },
     Weather: {
-      WHEATHER_API_KEY: config.WHEATHER_API_KEY,
+      WEATHER_API_KEY: config.WEATHER_API_KEY,
     },
     GEMINI: {
       GEMINI_API_KEY: config.GEMINI_API_KEY,
