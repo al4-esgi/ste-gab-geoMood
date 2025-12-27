@@ -2,15 +2,16 @@
 
 ## Gabriel de Souza Morais
 
-1. Mise en place du front-end 
-2. Intégration de la carte Leaflet pour la prise en charge de la position de l’utilisateur 
+1. Mise en place du front-end
+2. Intégration de la carte Leaflet pour la prise en charge de la position de l’utilisateur
 3. Mise en place du système de prise de photos côté front-end
 4. XP avec Steevy pour les premiers tests des inputs et le début des tests de l’API météo
 5. Finalisation des tests de l’API météo
 6. Implémentation de tests pour les appels à la base de données
 7. Implémentation de tests pour les routes REST
 8. Branchement du back-end et du front-end
-9. XP avec Steevy pour implementer l'architecture hexagonale
+9. XP avec Steevy pour implementer l'architecture hexagonal
+10. Mise en place Docker
 
 ## Hoareau Steevy
 
