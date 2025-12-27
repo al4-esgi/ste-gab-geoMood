@@ -3,11 +3,11 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
 import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data'
-import { type EnvironmentVariables, validateEnv } from './_utils/config/env.config'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { MoodsModule } from './moods/moods.module'
-import { UsersModule } from './users/users.module'
+import { type EnvironmentVariables, validateEnv } from './infrastructure/config/env.config'
+import { MoodsModule } from './infrastructure/modules/moods.module'
+import { UsersModule } from './infrastructure/modules/users.module'
 
 @Module({
   imports: [

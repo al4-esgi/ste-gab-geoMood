@@ -3,9 +3,9 @@ import { Global, Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
 import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data'
-import { validateEnv } from '../../src/_utils/config/env.config'
-import { MoodsModule } from '../../src/moods/moods.module'
-import { UsersModule } from '../../src/users/users.module'
+import { validateEnv } from '../../src/infrastructure/config/env.config'
+import { MoodsModule } from '../../src/infrastructure/modules/moods.module'
+import { UsersModule } from '../../src/infrastructure/modules/users.module'
 import { MongoMemoryModule, MongoMemoryService } from '../setup/mongodb-memory-server'
 
 @Global()

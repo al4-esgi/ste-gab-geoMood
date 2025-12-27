@@ -1,34 +1,18 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import * as fs from 'fs'
-import * as path from 'path'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { MoodsService } from '../src/moods/moods.service'
-import { UsersRepository } from '../src/users/users.repository'
+import { UsersRepository } from '../src/infrastructure/adapters/database/users.repository'
 import { TestModule } from './mocks/test.module'
-
-/*
-### API Routes Tests
-
-- POST /moods - Submit mood entry with text, rating, location, weather
-- GET /moods - Get user's moods
-*/
 
 describe('API Routes', { timeout: 30000 }, () => {
   let app: INestApplication
   let usersRepository: UsersRepository
   let testUserEmail: string
-  let moodsService: MoodsService
 
   const mockLocation = { lat: 40.7128, lng: -74.006 }
-  const mockWeather = {
-    temperature: 22,
-    condition: 'Sunny',
-    humidity: 60,
-    pressure: 1013,
-    windSpeed: 5,
-  }
 
   beforeEach(async () => {
     testUserEmail = `test${Date.now()}@example.com`
@@ -49,14 +33,13 @@ describe('API Routes', { timeout: 30000 }, () => {
     await app.init()
 
     usersRepository = module.get<UsersRepository>(UsersRepository)
-    moodsService = module.get<MoodsService>(MoodsService)
   })
 
   afterEach(async () => {
     vi.restoreAllMocks()
     const user = await usersRepository.findUserByEmail(testUserEmail)
     if (user) {
-      await usersRepository.deleteUser(user._id.toString())
+      await usersRepository.deleteUser(user.id)
     }
     await app.close()
   })
@@ -114,7 +97,6 @@ describe('API Routes', { timeout: 30000 }, () => {
           textContent: 'Test mood',
           rating: 5,
           location: mockLocation,
-          weather: mockWeather,
         })
         .expect(400)
     })
